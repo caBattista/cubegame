@@ -4,7 +4,7 @@ class Game {
         this.USE_WIREFRAME = false;
         this.scene = new THREE.Scene();
         this.player = { height:0.5, speed:0.5, turnSpeed:Math.PI*0.005, gravity: 0.2};
-        this.bullet = { height:0.6, speed:0.5, end: 500, gravity: 0};
+        this.bullet = { height:0.6, speed:1, end: 500, gravity: 0};
         this.keys = {};
         this.audio = {ugh: new Audio('audio/ugh.mp3'), hit: new Audio('audio/hit.mp3') };
 
@@ -94,7 +94,7 @@ class Game {
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.shadowMap.enabled = true;
-        //this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        // this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         // this.renderer.gammaInput = true;
         // this.renderer.gammaOutput = true;
 
@@ -139,8 +139,7 @@ class Game {
             move(-Math.PI/2);
         }
         if(this.keys[37]){ // left arrow key
-            //this.self.yaw.rotation.y += this.player.turnSpeed;
-            this.sun.position.add(this.sun.getWorldDirection(new THREE.Vector3()));
+            this.self.yaw.rotation.y += this.player.turnSpeed;
         }
         if(this.keys[39]){ // right arrow key
             this.self.yaw.rotation.y -= this.player.turnSpeed;

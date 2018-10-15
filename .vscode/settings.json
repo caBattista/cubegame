@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "/subscriptions/f900c95d-6592-4b38-bb36-8494e004bccc/resourceGroups/cubegame/providers/Microsoft.Web/sites/cubegame",
+    "appService.deploySubpath": ""
+}
