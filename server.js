@@ -70,7 +70,7 @@ const broadcast = (data, dontBCId) => {
 };
 
 const sendJson = (ws, json) => {
-  ws.send(JSON.stringify(json));
+    ws.send(JSON.stringify(json));
 }
 
 const initClient = (ws) => {

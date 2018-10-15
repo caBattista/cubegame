@@ -3,23 +3,36 @@ class Game {
         //settings
         this.USE_WIREFRAME = false;
         this.scene = new THREE.Scene();
-        this.player = { height:1.8, speed:0.2, turnSpeed:Math.PI*0.005, gravity: 0.5};
-        this.bullet = { height:0.6, speed:2, end: 500, gravity: 0};
+        this.player = { height:0.5, speed:0.5, turnSpeed:Math.PI*0.005, gravity: 0.2};
+        this.bullet = { height:0.6, speed:0.5, end: 500, gravity: 0};
         this.keys = {};
-        this.pointerLocked = false;
-        this.audio = {ugh: new Audio('ugh.mp3')};
+        this.audio = {ugh: new Audio('audio/ugh.mp3'), hit: new Audio('audio/hit.mp3') };
+
+        //stats
+        this.stats = new Stats();
+         // 0: fps, 1: ms, 2: mb, 3+: custom
+        this.stats.showPanel( 0 );
+        document.body.appendChild( this.stats.dom );
 
         //lights
         let ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
         this.scene.add(ambientLight);
 
-        let directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        directionalLight.castShadow = true;
-        directionalLight.position.set(125, 150, 200);
-        directionalLight.lookAt(new THREE.Vector3(0,this.player.height,0));
-        directionalLight.shadow.camera.near = 0;
-        directionalLight.shadow.camera.far = 1000;
-        this.scene.add( directionalLight );
+        this.sun = new THREE.DirectionalLight (0xffffff, 0.5);
+        this.sun.castShadow = true;
+        this.sun.shadow.camera.left = -200;
+        this.sun.shadow.camera.right = 200;
+        this.sun.shadow.camera.top = 200;
+        this.sun.shadow.camera.bottom = -200;
+        this.sun.shadow.mapSize.width = 2048;//32768;
+        this.sun.shadow.mapSize.height = 2048;//32768;
+        this.sun.shadow.camera.near = 0.1;
+        this.sun.shadow.camera.far = 1000;
+        this.sun.position.set(170, 130, 280);
+        this.sun.lookAt(new THREE.Vector3(0,this.player.height,0));
+        // this.scene.add(new THREE.DirectionalLightHelper( this.sun ));
+        // this.scene.add(new THREE.CameraHelper( this.sun.shadow.camera ));
+        this.scene.add(this.sun);
     
         //skybox            
         let directions  = ["left", "right", "back", "front", "bottom", "top"];
@@ -57,23 +70,33 @@ class Game {
         this.scene.add(mesh);
 
         //self
-        this.self = new THREE.Mesh();
-        this.self.position.set(0, this.player.height, 1);
+        this.self = {};
+        this.self.yaw = new THREE.Object3D();
+        this.self.yaw.position.set(0,this.player.height,0);
+        this.scene.add(this.self.yaw);
 
+        this.self.pitch = new THREE.Mesh(
+            new THREE.BoxGeometry(1,1,1),
+            new THREE.MeshPhongMaterial({color:0xff4444, wireframe:this.USE_WIREFRAME})
+        );
+        this.self.pitch.receiveShadow = true;
+        this.self.pitch.castShadow = true;
+        this.self.yaw.add(this.self.pitch);
 
         //camera
-        this.camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 1000);  
-        this.camera.position.set(0, this.player.height, 1);
-        //this.camera.lookAt(new THREE.Vector3(0,this.player.height,0));
-        //this.self.add(this.camera);
-
-        this.scene.add(self);
+        this.camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 1000);
+        //this.camera.position.set(0,2,-5);
+        this.camera.rotation.set(0, Math.PI, 0);
+        //this.scene.add( new THREE.CameraHelper( this.camera ) );
+        this.self.pitch.add(this.camera);
 
         //renderer
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.BasicShadowMap;
+        //this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        // this.renderer.gammaInput = true;
+        // this.renderer.gammaOutput = true;
 
         //add to document
         document.body.appendChild(this.renderer.domElement);
@@ -87,96 +110,43 @@ class Game {
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(window.innerWidth, window.innerHeight);
         });
-        
-        //mouse
-        var havePointerLock = 'pointerLockElement' in document ||
-        'mozPointerLockElement' in document ||
-        'webkitPointerLockElement' in document;
-        if(havePointerLock === true){
-            // Ask the browser to lock the pointer
-            let canvas = document.getElementsByTagName("canvas")[0];
-            canvas.requestPointerLock = canvas.requestPointerLock ||
-            canvas.mozRequestPointerLock || canvas.webkitRequestPointerLock;
 
-            const setPointerlock = ev => {
-                if(this.pointerLocked === true) return;
-
-                this.pointerLocked = true;
-                canvas.requestPointerLock();
-
-
-                const moveCam = (ev) => {
-                    this.camera.rotation.set(
-                        this.camera.rotation._x + ev.movementY/1500,
-                        this.camera.rotation._y + ev.movementX/1500,
-                        this.camera.rotation._z
-                     );
-                }
-                canvas.addEventListener("mousemove", moveCam, false);
-
-                const shoot = (ev) => {
-                    this.newBullet(ws.playerId);
-                } 
-                canvas.addEventListener("mousedown", shoot, false);
-
-                const lockChange = () => {
-                    if(this.pointerLocked === true){
-                        this.pointerLocked = false;
-                        canvas.removeEventListener("mousemove", moveCam);
-                        canvas.removeEventListener("mousedown", shoot);
-                        document.removeEventListener('pointerlockchange', lockChange, false);
-                        document.removeEventListener('mozpointerlockchange', lockChange, false);
-                        document.removeEventListener('webkitpointerlockchange', lockChange, false);
-                    }
-                }
-                setTimeout(() => {
-                    document.addEventListener('pointerlockchange', lockChange, false);
-                    document.addEventListener('mozpointerlockchange', lockChange, false);
-                    document.addEventListener('webkitpointerlockchange', lockChange, false);
-                },0);
-            }
-            canvas.addEventListener("click", setPointerlock);
-
-
-            // Ask the browser to release the pointer
-            // document.exitPointerLock = document.exitPointerLock ||
-            // document.mozExitPointerLock ||
-            // document.webkitExitPointerLock;
-            //document.exitPointerLock();
-        }
-
-
+        this.initPointerlock();
         //start animaiton
         this.animate();
     }
 
     animate(){
+        this.stats.begin();
         //movement
+        let move = (degRad) => {
+            this.self.yaw.position.add(
+                this.camera.getWorldDirection(new THREE.Vector3())
+                    .applyAxisAngle(new THREE.Vector3(0,1,0), degRad)
+                    .multiply(new THREE.Vector3(this.player.speed, 0, this.player.speed))
+            );
+        }
         if(this.keys[87]){ // W key
-            this.camera.position.x -= Math.sin(this.camera.rotation.y) * this.player.speed;
-            this.camera.position.z -= -Math.cos(this.camera.rotation.y) * this.player.speed;
+            move(0);
         }
         if(this.keys[83]){ // S key
-            this.camera.position.x += Math.sin(this.camera.rotation.y) * this.player.speed;
-            this.camera.position.z += -Math.cos(this.camera.rotation.y) * this.player.speed;
+            move(Math.PI);
         }
         if(this.keys[65]){ // A key
-            this.camera.position.x += Math.sin(this.camera.rotation.y + Math.PI/2) * this.player.speed;
-            this.camera.position.z += -Math.cos(this.camera.rotation.y + Math.PI/2) * this.player.speed;
+            move(Math.PI/2);
         }
         if(this.keys[68]){ // D key
-            this.camera.position.x += Math.sin(this.camera.rotation.y - Math.PI/2) * this.player.speed;
-            this.camera.position.z += -Math.cos(this.camera.rotation.y - Math.PI/2) * this.player.speed;
+            move(-Math.PI/2);
         }
-
         if(this.keys[37]){ // left arrow key
-            this.camera.rotation.y -= this.player.turnSpeed;
+            //this.self.yaw.rotation.y += this.player.turnSpeed;
+            this.sun.position.add(this.sun.getWorldDirection(new THREE.Vector3()));
         }
         if(this.keys[39]){ // right arrow key
-            this.camera.rotation.y += this.player.turnSpeed;
+            this.self.yaw.rotation.y -= this.player.turnSpeed;
         }
         if(this.keys[40]){ // down arrow key
-            //this.camera.rotation.x += this.player.turnSpeed;
+            this.self.pitch.rotation.x += this.player.turnSpeed;
         }
         if(this.keys[38] && !this.keys[38].pressed){ // up arrow key
             this.keys[38] = {pressed: true};
@@ -191,20 +161,22 @@ class Game {
             this.player.turnSpeed = Math.PI*0.005;
         }
         if(this.keys[32]){ // space bar
-            this.camera.position.y += 1;
+            this.self.yaw.position.y += 1;
         }
 
-        //check if fall map
-        if (Math.abs(this.camera.position.x) > 125 || Math.abs(this.camera.position.z) > 125)  {
-            this.camera.position.y -= this.player.gravity;
-        }
         //gravity
-        else if(this.camera.position.y > 1){
-            this.camera.position.y -= this.player.gravity;
+        if (Math.abs(this.self.yaw.position.x) > 125 || Math.abs(this.self.yaw.position.z) > 125)  {
+            this.self.yaw.position.y -= this.player.gravity;
+        }
+        else if(this.self.yaw.position.y < this.player.height ){
+            this.self.yaw.position.y = this.player.height;
+        }
+        else if(this.self.yaw.position.y > this.player.height) {
+            this.self.yaw.position.y -= this.player.gravity;
         }
 
         //despawn
-        if(this.camera.position.y < -25){
+        if(this.self.yaw.position.y < -25){
             this.ws.sendJson({
                 hit: {   
                     id: ws.playerId
@@ -222,11 +194,14 @@ class Game {
                     this.scene.remove(sc[i]);
                 }
                 else{
-                    sc[i].position.x -= Math.sin(sc[i].rotation.y) * this.bullet.speed;
+                    sc[i].position.add(
+                        sc[i].getWorldDirection(new THREE.Vector3())
+                            .multiplyScalar(this.bullet.speed)
+                    );
                     sc[i].position.y -= this.bullet.gravity;
-                    sc[i].position.z -= -Math.cos(sc[i].rotation.y) * this.bullet.speed;
                 }
-                if (this.colisionDetect(this.camera, sc[i]) && sc[i].name.split("_")[1] !== ws.playerId) {
+                if (!this.waitForSpawn && this.colisionDetect(this.self.yaw, sc[i]) && sc[i].name.split("_")[1] !== ws.playerId) {
+                    this.waitForSpawn = true;
                     this.ws.sendJson({
                         hit: {   
                             id: ws.playerId,
@@ -245,11 +220,12 @@ class Game {
 
         this.renderer.render(this.scene, this.camera);
         requestAnimationFrame(() => { this.animate(); });
+        this.stats.end();
     }
 
     newAvatar(obj) {
         let avatar = new THREE.Mesh(
-            new THREE.BoxGeometry(2,2,2),
+            new THREE.BoxGeometry(1,1,1),
             new THREE.MeshPhongMaterial({color:obj.color, wireframe:this.USE_WIREFRAME})
         );
         avatar.name = String(obj.id);
@@ -283,8 +259,8 @@ class Game {
             bullet.castShadow = true;
 
             bullet.name = "b_" + msg;
-            bullet.position.set(this.camera.position.x, this.camera.position.y - this.bullet.height, this.camera.position.z);
-            bullet.rotation.set(this.camera.rotation._x,this.camera.rotation._y,this.camera.rotation._z);
+            bullet.position.add(this.self.pitch.getWorldPosition(new THREE.Vector3()));
+            bullet.rotation.setFromQuaternion( this.self.pitch.getWorldQuaternion(new THREE.Quaternion()));
 
             this.ws.sendJson({
                 nb: {   
@@ -305,15 +281,17 @@ class Game {
         this.scene.add(bullet);
     }
 
-    colisionDetect(obj1, obj2, dist = 1.5) {
+    colisionDetect(obj1, obj2, dist = 0.8) {
         if(obj1 && obj2){
             return obj1.position.distanceTo(obj2.position) < dist ? true : false;
         }
     }
 
-    setSelf(loc, rot = true){
-        this.camera.position.set(loc.x, loc.y, loc.z);
-        if(rot) this.camera.rotation.set(loc._x, loc._y, loc._z);
+    setSelf(obj){
+        this.waitForSpawn = false;
+        this.self.yaw.position.set(obj.loc.x, obj.loc.y, obj.loc.z);
+        if(obj.color) game.self.pitch.material.color.setHex(parseInt(obj.color.substring(1), 16))
+        //if(rot) this.camera.rotation.set(loc._x, loc._y, loc._z);
         //else this.camera.lookAt(new THREE.Vector3(0, this.player.height, 0));
     }
 
@@ -325,9 +303,64 @@ class Game {
         }
     }
 
+    getPlayer(){
+        return {
+            position : this.self.pitch.getWorldPosition(new THREE.Vector3()),
+            rotation : new THREE.Euler().setFromQuaternion(this.self.pitch.getWorldQuaternion(new THREE.Quaternion()))
+        };
+    }
+
     playAudio(name) {
         try {
             this.audio[name].play();
         } catch (error) {}
+    }
+
+    initPointerlock(){
+        this.havePointerLock = 'pointerLockElement' in document ||
+		'mozPointerLockElement' in document ||
+        'webkitPointerLockElement' in document;
+        
+        const setPointerlock = () => {
+            if(game.pointerLocked === true) return;
+            game.pointerLocked = true;
+            game.renderer.domElement.requestPointerLock();
+            game.renderer.domElement.addEventListener("mousemove", moveCam, false);
+
+            setTimeout(() => {
+                document.addEventListener('pointerlockchange', lockChange, false);
+                document.addEventListener('mozpointerlockchange', lockChange, false);
+                document.addEventListener("mousedown", shoot, false);
+            },0);
+        }
+
+        const lockChange = () => {
+            if(game.pointerLocked === true){
+                game.pointerLocked = false;
+                game.renderer.domElement.removeEventListener("mousemove", moveCam);
+                document.removeEventListener("mousedown", shoot, false);
+                document.removeEventListener('pointerlockchange', lockChange, false);
+                document.removeEventListener('mozpointerlockchange', lockChange, false);
+            }
+        }
+        
+        const moveCam = (event) => {
+            var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
+            var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
+            game.self.yaw.rotation.y -= movementX * 0.002;
+            game.self.pitch.rotation.x += movementY * 0.002;
+        }
+
+        const shoot = (ev) => {
+            game.newBullet(ws.playerId);
+        }
+
+		if(this.havePointerLock === true){
+			this.pointerLocked = false;
+
+			this.renderer.domElement.requestPointerLock = this.renderer.domElement.requestPointerLock ||
+			this.renderer.domElement.mozRequestPointerLock || this.renderer.domElement.webkitRequestPointerLock;
+			this.renderer.domElement.addEventListener("click", setPointerlock);
+		}
     }
 }

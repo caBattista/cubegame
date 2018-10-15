@@ -21,23 +21,25 @@ class Websocket {
                 if(msg.ns){
                     this.playerId = msg.ns.id;
                     this.players.push(msg.ns);
-                    this.game.setSelf(msg.ns.loc);
-                    let oldCam = JSON.stringify(this.game.camera);
+                    this.game.setSelf(msg.ns);
+                    let oldCam = JSON.stringify(this.game.getPlayer());
 
                     setInterval(() => {
-                        let camString = JSON.stringify(this.game.camera);
+                        let camLoc = this.game.getPlayer();
+                        let camString = JSON.stringify(camLoc);
+                        
                         if (oldCam !== camString) {
                             oldCam = camString;
                             this.sendJson({
                                 udp: {   
                                     id: this.playerId,
                                     loc: {
-                                        x: this.rndFlt(this.game.camera.position.x),
-                                        y: this.rndFlt(this.game.camera.position.y),
-                                        z: this.rndFlt(this.game.camera.position.z),
-                                        _x: this.rndFlt(this.game.camera.rotation._x),
-                                        _y: this.rndFlt(this.game.camera.rotation._y),
-                                        _z: this.rndFlt(this.game.camera.rotation._z),
+                                        x: this.rndFlt(camLoc.position.x),
+                                        y: this.rndFlt(camLoc.position.y),
+                                        z: this.rndFlt(camLoc.position.z),
+                                        _x: this.rndFlt(camLoc.rotation._x),
+                                        _y: this.rndFlt(camLoc.rotation._y),
+                                        _z: this.rndFlt(camLoc.rotation._z),
                                     },
                                 }
                             });
@@ -57,7 +59,12 @@ class Websocket {
                     this.game.newBullet(msg,true);
                 }
                 else if(msg.sp){
-                    this.game.setSelf(msg.sp.loc);
+                    this.game.setSelf(msg.sp);
+                }
+                else if(msg.hit){
+                    if(msg.hit.hitter === this.playerId){
+                        this.game.playAudio("hit");
+                    }
                 }
                 else if(msg.lb){
                     let table = document.getElementById("leaderBoard").children[1];
