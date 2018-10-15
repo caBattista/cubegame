@@ -1,0 +1,28 @@
+body{
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    font-family: sans-serif;
+    color: white;
+}
+#leaderBoard{
+    position: fixed;
+    top: 0;
+    right: 0;
+    background-color: rgba(0,0,0,0.2);
+}
+#leaderBoard > h4{
+    margin: 0;
+    text-align: center;
+}
+#leaderBoard table{
+    border-collapse: collapse;
+    margin-left: auto;
+    margin-right: auto;
+}
+#leaderBoard tbody{
+    background-color: rgba(0,0,0,0.2);
+}
+#leaderBoard td, th{
+    padding: 4px;
+}
