@@ -26,3 +26,11 @@ body{
 #leaderBoard td, th{
     padding: 4px;
 }
+#crosshair{
+    position: fixed;
+    height: 3px;
+    width: 3px;
+    top: calc(50% - 1.5px);
+    right: calc(50% - 1.5px);
+    background-color: rgba(255,0,0,0.8);
+}

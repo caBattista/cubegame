@@ -3,8 +3,8 @@ class Game {
         //settings
         this.USE_WIREFRAME = false;
         this.scene = new THREE.Scene();
-        this.player = { height:0.5, speed:0.5, turnSpeed:Math.PI*0.005, gravity: 0.2};
-        this.bullet = { height:0.6, speed:1, end: 500, gravity: 0};
+        this.player = { height:0.5, speed:0.5, turnSpeed:Math.PI*0.005, gravity: 0.3};
+        this.bullet = { height:0.4, speed:0.8, end: 500, gravity: 0};
         this.keys = {};
         this.audio = {ugh: new Audio('audio/ugh.mp3'), hit: new Audio('audio/hit.mp3') };
 
