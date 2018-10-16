@@ -35,22 +35,22 @@ class Game {
         this.scene.add(this.sun);
     
         //skybox            
-        let directions  = ["left", "right", "back", "front", "bottom", "top"];
+        const directions  = ["left", "right", "back", "front", "bottom", "top"];
         let materialArray = [];
         for (let i = 0; i < 6; i++)
             materialArray.push( new THREE.MeshBasicMaterial({
             map: THREE.ImageUtils.loadTexture("skybox/" + directions[i] + ".jpg"),
             side: THREE.BackSide
         }));
-        let skyGeometry = new THREE.CubeGeometry( 500, 500, 500 );
-        let skyMaterial = new THREE.MeshFaceMaterial( materialArray );
-        let skyBox = new THREE.Mesh( skyGeometry, skyMaterial );
+        const skyGeometry = new THREE.CubeGeometry( 500, 500, 500 );
+        const skyMaterial = new THREE.MeshFaceMaterial( materialArray );
+        const skyBox = new THREE.Mesh( skyGeometry, skyMaterial );
         skyBox.rotation.x += Math.PI / 2;
         skyBox.position.set(0, this.player.height, -5);
         this.scene.add( skyBox );
 
         //floor
-        let meshFloor = new THREE.Mesh(
+        const meshFloor = new THREE.Mesh(
             new THREE.PlaneGeometry(250,250, 10,10),
             new THREE.MeshPhongMaterial({color:0xcccccc, wireframe:this.USE_WIREFRAME})
         );
@@ -59,7 +59,7 @@ class Game {
         this.scene.add(meshFloor);
         
         //mesh
-        let mesh = new THREE.Mesh(
+        const mesh = new THREE.Mesh(
             new THREE.BoxGeometry(1,1,1),
             new THREE.MeshPhongMaterial({color:0xff4444, wireframe:this.USE_WIREFRAME})
         );
@@ -119,7 +119,7 @@ class Game {
     animate(){
         this.stats.begin();
         //movement
-        let move = (degRad) => {
+        const move = (degRad) => {
             this.self.yaw.position.add(
                 this.camera.getWorldDirection(new THREE.Vector3())
                     .applyAxisAngle(new THREE.Vector3(0,1,0), degRad)
@@ -176,7 +176,7 @@ class Game {
 
         //despawn
         if(this.self.yaw.position.y < -25){
-            this.ws.sendJson({
+            ws.sendJson({
                 hit: {   
                     id: ws.playerId
                 }
@@ -185,35 +185,60 @@ class Game {
         }
 
         //bullets
-        let sc = this.scene.children;
+        const sc = this.scene.children;
         for (let i = 0; i < sc.length; i++) {
-            if (sc[i].name.split("_")[0] === "b") {
-                let json = JSON.parse(sc[i].startPos);
+            if (sc[i].name && sc[i].name.split("_")[0] === "b") {
+                //bullets
+                const json = JSON.parse(sc[i].startPos);
+                //remove bullets out of bounds
                 if(sc[i].position.distanceTo(new THREE.Vector3(json.x, json.y, json.z)) > this.bullet.end){
                     this.scene.remove(sc[i]);
                 }
                 else{
-                    sc[i].position.add(
-                        sc[i].getWorldDirection(new THREE.Vector3())
-                            .multiplyScalar(this.bullet.speed)
-                    );
-                    sc[i].position.y -= this.bullet.gravity;
-                }
-                if (!this.waitForSpawn && this.colisionDetect(this.self.yaw, sc[i]) && sc[i].name.split("_")[1] !== ws.playerId) {
-                    this.waitForSpawn = true;
-                    this.ws.sendJson({
-                        hit: {   
-                            id: ws.playerId,
-                            hitter: sc[i].name.split("_")[1]
+                    //check if bullet is near players
+                    for (const player of ws.players) {
+                        let playerObj = this.scene.getObjectByName(player.id);
+                        if(sc[i].name.split("_")[1] !== player.id && playerObj && this.colisionDetect(playerObj, sc[i], 5)){
+                            sc[i].prevPlayerInRange = sc[i].playerInRange;
+                            sc[i].playerInRange = player.id;
+                            break;
                         }
-                    });
-                    this.playAudio("ugh");
+                        else if(sc[i].name.split("_")[1] !== player.id){
+                            sc[i].prevPlayerInRange = sc[i].playerInRange;
+                            sc[i].playerInRange = null;
+                        }
+                    }
+
+                    if (sc[i].playerInRange !== sc[i].prevPlayerInRange && sc[i].playerInRange) {
+                        sc[i].lookAt(this.scene.getObjectByName(sc[i].playerInRange).position);
+                        //sc[i].rotation.set(sc[i].rotation._x, sc[i].rotation._y + Math.PI, sc[i].rotation._z);   
+                    }
+
+                    //hit detection
+                    if (!this.waitForSpawn && sc[i].name.split("_")[1] !== ws.playerId && this.colisionDetect(this.self.yaw, sc[i])) {
+                        this.waitForSpawn = true;
+                        this.playAudio("ugh");
+                        ws.sendJson({
+                            hit: {   
+                                id: ws.playerId,
+                                hitter: sc[i].name.split("_")[1]
+                            }
+                        });
+                        this.scene.remove(sc[i]);
+                    }
+                    else{
+                        sc[i].position.add(
+                            sc[i].getWorldDirection(new THREE.Vector3())
+                                .multiplyScalar(this.bullet.speed)
+                        );
+                        sc[i].position.y -= this.bullet.gravity;
+                    }
                 }
             }   
         }
 
         //center rotating cube
-        let mesh = this.scene.getObjectByName("rotateCube");
+        const mesh = this.scene.getObjectByName("rotateCube");
         mesh.rotation.x += 0.01;
         mesh.rotation.y += 0.02;
 
@@ -223,7 +248,7 @@ class Game {
     }
 
     newAvatar(obj) {
-        let avatar = new THREE.Mesh(
+        const avatar = new THREE.Mesh(
             new THREE.BoxGeometry(1,1,1),
             new THREE.MeshPhongMaterial({color:obj.color, wireframe:this.USE_WIREFRAME})
         );
@@ -240,7 +265,7 @@ class Game {
         if (fromWS) {
             bullet = new THREE.Mesh(
                 new THREE.BoxGeometry(0.2,0.2,0.2),
-                new THREE.MeshPhongMaterial({color: this.ws.getPlayer(msg.nb.id.split("_")[1]).color, wireframe:this.USE_WIREFRAME})
+                new THREE.MeshPhongMaterial({color: ws.getPlayer(msg.nb.id.split("_")[1]).color, wireframe:this.USE_WIREFRAME})
             );
             bullet.receiveShadow = true;
             bullet.castShadow = true;
@@ -252,7 +277,7 @@ class Game {
         else{
             bullet = new THREE.Mesh(
                 new THREE.BoxGeometry(0.2,0.2,0.2),
-                new THREE.MeshPhongMaterial({color: this.ws.getPlayer(this.ws.playerId).color, wireframe:this.USE_WIREFRAME})
+                new THREE.MeshPhongMaterial({color: ws.getPlayer(ws.playerId).color, wireframe:this.USE_WIREFRAME})
             );
             bullet.receiveShadow = true;
             bullet.castShadow = true;
@@ -261,41 +286,37 @@ class Game {
             bullet.position.add(this.self.pitch.getWorldPosition(new THREE.Vector3()));
             bullet.rotation.setFromQuaternion( this.self.pitch.getWorldQuaternion(new THREE.Quaternion()));
 
-            this.ws.sendJson({
+            ws.sendJson({
                 nb: {   
                     id: bullet.name,
                     loc: {
-                        x: this.ws.rndFlt(bullet.position.x),
-                        y: this.ws.rndFlt(bullet.position.y),
-                        z: this.ws.rndFlt(bullet.position.z),
-                        _x: this.ws.rndFlt(bullet.rotation._x),
-                        _y: this.ws.rndFlt(bullet.rotation._y),
-                        _z: this.ws.rndFlt(bullet.rotation._z),
+                        x: ws.rndFlt(bullet.position.x),
+                        y: ws.rndFlt(bullet.position.y),
+                        z: ws.rndFlt(bullet.position.z),
+                        _x: ws.rndFlt(bullet.rotation._x),
+                        _y: ws.rndFlt(bullet.rotation._y),
+                        _z: ws.rndFlt(bullet.rotation._z),
                     },
                 }
             });
         }
-
         bullet.startPos = JSON.stringify(bullet.position);
         this.scene.add(bullet);
     }
 
     colisionDetect(obj1, obj2, dist = 0.8) {
-        if(obj1 && obj2){
-            return obj1.position.distanceTo(obj2.position) < dist ? true : false;
-        }
+        return obj1.position.distanceTo(obj2.position) < dist ? true : false;
     }
 
     setSelf(obj){
         this.waitForSpawn = false;
+        this.self.yaw.name = obj.id;
         this.self.yaw.position.set(obj.loc.x, obj.loc.y, obj.loc.z);
         if(obj.color) game.self.pitch.material.color.setHex(parseInt(obj.color.substring(1), 16))
-        //if(rot) this.camera.rotation.set(loc._x, loc._y, loc._z);
-        //else this.camera.lookAt(new THREE.Vector3(0, this.player.height, 0));
     }
 
     setPlayer(id, loc) {
-        let obj = this.scene.getObjectByName(id);
+        const obj = this.scene.getObjectByName(id);
         if (obj) {
             obj.position.set(loc.x, loc.y, loc.z);
             obj.rotation.set(loc._x, loc._y, loc._z);
@@ -329,6 +350,7 @@ class Game {
             setTimeout(() => {
                 document.addEventListener('pointerlockchange', lockChange, false);
                 document.addEventListener('mozpointerlockchange', lockChange, false);
+                document.addEventListener("mousedown", shoot, false);
                 document.addEventListener("mousedown", shoot, false);
             },0);
         }

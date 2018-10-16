@@ -10,7 +10,7 @@ class Websocket {
             this.playerId = -1;
             this.players = [];
 
-            let nick = prompt("Plase select a nickname.")
+            let nick = "";//prompt("Plase select a nickname.")
 
             this.sendJson({rp:{nick: nick}});
 
@@ -27,9 +27,9 @@ class Websocket {
                     setInterval(() => {
                         let camLoc = this.game.getPlayer();
                         let camString = JSON.stringify(camLoc);
-                        
                         if (oldCam !== camString) {
                             oldCam = camString;
+                            //console.log(camString);
                             this.sendJson({
                                 udp: {   
                                     id: this.playerId,
@@ -59,6 +59,7 @@ class Websocket {
                     this.game.newBullet(msg,true);
                 }
                 else if(msg.sp){
+                    msg.sp.id = this.playerId;
                     this.game.setSelf(msg.sp);
                 }
                 else if(msg.hit){

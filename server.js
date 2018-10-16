@@ -44,7 +44,7 @@ wss.on('connection', function(ws) {
     }
     else if(msg.udp) client.loc = msg.udp.loc;
     else if(msg.hit) {
-      sendJson(ws, {sp: {loc: getRndLoc(125)}} );
+      sendJson(ws, {sp: {loc: getRndLoc(25)}} );
       if (msg.hit.hitter) clients[msg.hit.hitter].k++;
       clients[msg.hit.id].d++;
       updateLB();
@@ -75,7 +75,7 @@ const sendJson = (ws, json) => {
 
 const initClient = (ws) => {
   let clientId = Math.random().toString(36).substr(2, 16);//generate unique id
-  clients[clientId] = {id: clientId, k: 0, d: 0, color: getRandomColor(), loc:getRndLoc(125), ws: ws};
+  clients[clientId] = {id: clientId, k: 0, d: 0, color: getRandomColor(), loc:getRndLoc(25), ws: ws};
   return clients[clientId];
 }
 
@@ -107,5 +107,5 @@ const getRnd = (min, max) => {
 }
 
 const getRndLoc = (range) => {
-  return {x: getRnd(-range,range), y: 1, z: getRnd(-range,range), _x: -3.142, _y: 0, _z: -3.142};
+  return {x: getRnd(-range,range), y: 1, z: getRnd(-range,range), _x: 0, _y: 0, _z: 0};
 }
