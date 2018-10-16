@@ -147,8 +147,7 @@ class Game {
         if(this.keys[40]){ // down arrow key
             this.self.pitch.rotation.x += this.player.turnSpeed;
         }
-        if(this.keys[38] && !this.keys[38].pressed){ // up arrow key
-            this.keys[38] = {pressed: true};
+        if(this.keys[38]){ // up arrow key
             this.newBullet(ws.playerId);
         }
         if(this.keys[16]){ // left shift

@@ -10,7 +10,7 @@ class Websocket {
             this.playerId = -1;
             this.players = [];
 
-            let nick = "";//prompt("Plase select a nickname.")
+            let nick = prompt("Plase select a nickname.")
 
             this.sendJson({rp:{nick: nick}});
 
