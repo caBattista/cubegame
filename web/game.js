@@ -283,6 +283,7 @@ class Game {
 
             bullet.name = "b_" + msg;
             bullet.position.add(this.self.pitch.getWorldPosition(new THREE.Vector3()));
+            bullet.position.y -= 0.25;
             bullet.rotation.setFromQuaternion( this.self.pitch.getWorldQuaternion(new THREE.Quaternion()));
 
             ws.sendJson({
