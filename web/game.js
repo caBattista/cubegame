@@ -3,8 +3,8 @@ class Game {
         //settings
         this.USE_WIREFRAME = false;
         this.scene = new THREE.Scene();
-        this.player = { height:0.5, speed:0.5, turnSpeed:Math.PI*0.005, gravity: 0.3};
-        this.bullet = { height:0.4, speed:0.8, end: 500, gravity: 0};
+        this.player = { height:0.5, speed:0.5, turnSpeed:Math.PI*0.005, gravity: 0.3 };
+        this.bullet = { height:0.4, speed:0.8, end: 500, gravity: 0 };
         this.keys = {};
         this.audio = {ugh: new Audio('audio/ugh.mp3'), hit: new Audio('audio/hit.mp3') };
 
@@ -94,10 +94,8 @@ class Game {
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.shadowMap.enabled = true;
-        // this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        // this.renderer.gammaInput = true;
-        // this.renderer.gammaOutput = true;
-
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+ 
         //add to document
         document.body.appendChild(this.renderer.domElement);
 
@@ -151,15 +149,15 @@ class Game {
             this.newBullet(ws.playerId);
         }
         if(this.keys[16]){ // left shift
-            this.player.speed = 0.4;
+            this.player.speed = 0.8;
             this.player.turnSpeed = Math.PI*0.02;
         }
         else{
-            this.player.speed = 0.2;
+            this.player.speed = 0.4;
             this.player.turnSpeed = Math.PI*0.005;
         }
         if(this.keys[32]){ // space bar
-            this.self.yaw.position.y += 1;
+            this.self.yaw.position.y += this.player.speed;
         }
 
         //gravity
@@ -173,8 +171,14 @@ class Game {
             this.self.yaw.position.y -= this.player.gravity;
         }
 
-        //despawn
-        if(this.self.yaw.position.y < -25){
+        //despawn whren out of boundsw
+        if(this.self.yaw.position.y < -25 || 
+            this.self.yaw.position.y > 250 ||
+            this.self.yaw.position.x < -250 ||
+            this.self.yaw.position.x > 250 ||
+            this.self.yaw.position.z < -250 ||
+            this.self.yaw.position.z > 250
+        ){
             ws.sendJson({
                 hit: {   
                     id: ws.playerId
@@ -313,6 +317,10 @@ class Game {
         this.self.yaw.name = obj.id;
         this.self.yaw.position.set(obj.loc.x, obj.loc.y, obj.loc.z);
         if(obj.color) game.self.pitch.material.color.setHex(parseInt(obj.color.substring(1), 16))
+        let look = new THREE.Object3D();
+        look.position.set(obj.loc.x, obj.loc.y, obj.loc.z);
+        look.lookAt(this.scene.getObjectByName("rotateCube").position);
+        this.self.yaw.rotation.set(0,look.rotation._y,0);
     }
 
     setPlayer(id, loc) {
