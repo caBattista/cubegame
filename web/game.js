@@ -59,12 +59,12 @@ class Game {
         // this.scene.add(meshFloor);
 
         //floor
-        let waterGeometry = new THREE.PlaneBufferGeometry( 1000, 1000 );
+        let waterGeometry = new THREE.PlaneBufferGeometry( 8000, 8000 );
         this.water = new THREE.Water(
             waterGeometry,
             {
-                textureWidth: 256,
-                textureHeight: 256,
+                textureWidth: 512,
+                textureHeight: 512,
                 waterNormals: new THREE.TextureLoader().load( 'textures/waternormals.jpg', function ( texture ) {
                     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
                 }),
@@ -76,6 +76,7 @@ class Game {
                 fog: this.scene.fog !== undefined
             }
         );
+        this.water.material.uniforms.size.value = 5;
         this.water.position.set(0,-1,0);
         this.water.rotation.x = - Math.PI / 2;
         this.scene.add( this.water );
