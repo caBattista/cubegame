@@ -42,28 +42,50 @@ class Game {
             map: THREE.ImageUtils.loadTexture("skybox/" + directions[i] + ".jpg"),
             side: THREE.BackSide
         }));
-        const skyGeometry = new THREE.CubeGeometry( 500, 500, 500 );
+        const skyGeometry = new THREE.CubeGeometry( 10000, 10000, 10000 );
         const skyMaterial = new THREE.MeshFaceMaterial( materialArray );
         const skyBox = new THREE.Mesh( skyGeometry, skyMaterial );
         skyBox.rotation.x += Math.PI / 2;
-        skyBox.position.set(0, this.player.height, -5);
+        skyBox.position.set(0, 5, 0);
         this.scene.add( skyBox );
 
         //floor
-        const meshFloor = new THREE.Mesh(
-            new THREE.PlaneGeometry(250,250, 10,10),
-            new THREE.MeshPhongMaterial({color:0xcccccc, wireframe:this.USE_WIREFRAME})
+        // const meshFloor = new THREE.Mesh(
+        //     new THREE.PlaneGeometry(500,500, 10,10),
+        //     new THREE.MeshPhongMaterial({color:0xcccccc, wireframe:this.USE_WIREFRAME})
+        // );
+        // meshFloor.rotation.x -= Math.PI / 2;
+        // meshFloor.receiveShadow = true;
+        // this.scene.add(meshFloor);
+
+        //floor
+        let waterGeometry = new THREE.PlaneBufferGeometry( 1000, 1000 );
+        this.water = new THREE.Water(
+            waterGeometry,
+            {
+                textureWidth: 256,
+                textureHeight: 256,
+                waterNormals: new THREE.TextureLoader().load( 'textures/waternormals.jpg', function ( texture ) {
+                    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+                }),
+                alpha: 0.9,
+                sunDirection: this.sun.position.clone().normalize(),
+                sunColor: 0xffffff,
+                waterColor: 0x001e0f,
+                distortionScale:  4,
+                fog: this.scene.fog !== undefined
+            }
         );
-        meshFloor.rotation.x -= Math.PI / 2;
-        meshFloor.receiveShadow = true;
-        this.scene.add(meshFloor);
+        this.water.position.set(0,-1,0);
+        this.water.rotation.x = - Math.PI / 2;
+        this.scene.add( this.water );
         
         //mesh
         const mesh = new THREE.Mesh(
             new THREE.BoxGeometry(1,1,1),
             new THREE.MeshPhongMaterial({color:0xff4444, wireframe:this.USE_WIREFRAME})
         );
-        mesh.position.set(0, 1, 0);
+        mesh.position.set(0, 0.5, 0);
         mesh.receiveShadow = true;
         mesh.castShadow = true;
         mesh.name = "rotateCube";
@@ -84,7 +106,7 @@ class Game {
         this.self.yaw.add(this.self.pitch);
 
         //camera
-        this.camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 1000);
+        this.camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 10000);
         //this.camera.position.set(0,2,-5);
         this.camera.rotation.set(0, Math.PI, 0);
         //this.scene.add( new THREE.CameraHelper( this.camera ) );
@@ -116,6 +138,10 @@ class Game {
 
     animate(){
         this.stats.begin();
+
+        //water
+        this.water.material.uniforms.time.value += 1.0 / 60.0;
+
         //movement
         const move = (degRad) => {
             this.self.yaw.position.add(
