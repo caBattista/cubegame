@@ -15,18 +15,20 @@
     <script src="websocket.js"></script>
 </head>
 <body>
-    <script>
-        let game = new Game();
-        let ws = new Websocket(game);
-    </script>
-    <div id="statsFps"></div>
-    <div id="statsMs"></div>
-    <div id="statsmMb"></div>
+    <div id="stats">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
     <div id="leaderBoard">
         <h4>Players</h4>
         <table>
         </table>
     </div>
     <div id="crosshair"></div>
+    <script>
+        let game = new Game();
+        let ws = new Websocket();
+    </script>
 </body>
 </html>

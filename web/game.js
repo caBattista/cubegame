@@ -4,15 +4,11 @@ class Game {
         this.USE_WIREFRAME = false;
         this.scene = new THREE.Scene();
         this.player = { height:0.5, speed:0.5, turnSpeed:Math.PI*0.005, gravity: 0.3 };
-        this.bullet = { height:0.4, speed:0.8, end: 500, gravity: 0 };
+        this.bullet = { height:0.4, speed:0.2, end: 500, gravity: 0 };
         this.keys = {};
         this.audio = {ugh: new Audio('audio/ugh.mp3'), hit: new Audio('audio/hit.mp3') };
-
-        //stats
-        this.stats = new Stats();
-         // 0: fps, 1: ms, 2: mb, 3+: custom
-        this.stats.showPanel( 0 );
-        document.body.appendChild( this.stats.dom );
+        this.stats0 = new Stats(document.getElementById("stats").children[0], "fps");
+        this.stats1 = new Stats(document.getElementById("stats").children[1], "fps");
 
         //lights
         let ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
@@ -50,33 +46,33 @@ class Game {
         this.scene.add( skyBox );
 
         //floor
-        // const meshFloor = new THREE.Mesh(
-        //     new THREE.PlaneGeometry(500,500, 10,10),
-        //     new THREE.MeshPhongMaterial({color:0xcccccc, wireframe:this.USE_WIREFRAME})
-        // );
-        // meshFloor.rotation.x -= Math.PI / 2;
-        // meshFloor.receiveShadow = true;
-        // this.scene.add(meshFloor);
+        const meshFloor = new THREE.Mesh(
+            new THREE.PlaneGeometry(250,250, 10,10),
+            new THREE.MeshPhongMaterial({color:0xcccccc, wireframe:this.USE_WIREFRAME})
+        );
+        meshFloor.rotation.x -= Math.PI / 2;
+        meshFloor.receiveShadow = true;
+        this.scene.add(meshFloor);
 
         //floor
         let waterGeometry = new THREE.PlaneBufferGeometry( 8000, 8000 );
         this.water = new THREE.Water(
             waterGeometry,
             {
-                textureWidth: 512,
-                textureHeight: 512,
+                textureWidth: 1024,
+                textureHeight: 1024,
                 waterNormals: new THREE.TextureLoader().load( 'textures/waternormals.jpg', function ( texture ) {
                     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
                 }),
                 alpha: 0.9,
                 sunDirection: this.sun.position.clone().normalize(),
                 sunColor: 0xffffff,
-                waterColor: 0x001e0f,
-                distortionScale:  4,
+                waterColor: 0x00190f,
+                distortionScale:  5,
                 fog: this.scene.fog !== undefined
             }
         );
-        this.water.material.uniforms.size.value = 5;
+        this.water.material.uniforms.size.value = 1;
         this.water.position.set(0,-1,0);
         this.water.rotation.x = - Math.PI / 2;
         this.scene.add( this.water );
@@ -86,7 +82,7 @@ class Game {
             new THREE.BoxGeometry(1,1,1),
             new THREE.MeshPhongMaterial({color:0xff4444, wireframe:this.USE_WIREFRAME})
         );
-        mesh.position.set(0, 0.5, 0);
+        mesh.position.set(0, 1, 0);
         mesh.receiveShadow = true;
         mesh.castShadow = true;
         mesh.name = "rotateCube";
@@ -134,12 +130,28 @@ class Game {
 
         this.initPointerlock();
         //start animaiton
-        this.animate();
+        setInterval(() => { this.stats0.start();
+            this.stats1.start();
+            this.animate(); 
+            this.stats1.end();
+        }, 100);
+        this.render();
+    }
+
+    render(){
+        this.stats0.start();
+        //center rotating cube
+        const mesh = this.scene.getObjectByName("rotateCube");
+        mesh.rotation.x += 0.01;
+        mesh.rotation.y += 0.02;
+
+        this.renderer.render(this.scene, this.camera);
+            
+        requestAnimationFrame(() => { this.render(); });
+        this.stats0.end();
     }
 
     animate(){
-        this.stats.begin();
-
         //water
         this.water.material.uniforms.time.value += 1.0 / 60.0;
 
@@ -226,28 +238,33 @@ class Game {
                 }
                 else{
                     //check if bullet is near players
+                    // for (const player of ws.players) {
+                    //     let playerObj = this.scene.getObjectByName(player.id);
+                    //     if(sc[i].name.split("_")[1] !== player.id && playerObj && this.colisionDetect(playerObj, sc[i], 5)){
+                    //         sc[i].prevPlayerInRange = sc[i].playerInRange;
+                    //         sc[i].playerInRange = player.id;
+                    //         break;
+                    //     }
+                    //     else if(sc[i].name.split("_")[1] !== player.id){
+                    //         sc[i].prevPlayerInRange = sc[i].playerInRange;
+                    //         sc[i].playerInRange = null;
+                    //     }
+                    // }
+
+                    // if (sc[i].playerInRange !== sc[i].prevPlayerInRange && sc[i].playerInRange) {
+                    //     sc[i].lookAt(this.scene.getObjectByName(sc[i].playerInRange).position);
+                    //     //sc[i].rotation.set(sc[i].rotation._x, sc[i].rotation._y + Math.PI, sc[i].rotation._z);   
+                    // }
+
                     for (const player of ws.players) {
                         let playerObj = this.scene.getObjectByName(player.id);
-                        if(sc[i].name.split("_")[1] !== player.id && playerObj && this.colisionDetect(playerObj, sc[i], 5)){
-                            sc[i].prevPlayerInRange = sc[i].playerInRange;
-                            sc[i].playerInRange = player.id;
-                            break;
+                        if (ws.playerId !== player.id && this.colisionDetect(playerObj, sc[i])) {
+                            this.lastHitTime = new Date().getTime();
                         }
-                        else if(sc[i].name.split("_")[1] !== player.id){
-                            sc[i].prevPlayerInRange = sc[i].playerInRange;
-                            sc[i].playerInRange = null;
-                        }
-                    }
-
-                    if (sc[i].playerInRange !== sc[i].prevPlayerInRange && sc[i].playerInRange) {
-                        sc[i].lookAt(this.scene.getObjectByName(sc[i].playerInRange).position);
-                        //sc[i].rotation.set(sc[i].rotation._x, sc[i].rotation._y + Math.PI, sc[i].rotation._z);   
                     }
 
                     //hit detection
                     if (!this.waitForSpawn && sc[i].name.split("_")[1] !== ws.playerId && this.colisionDetect(this.self.yaw, sc[i])) {
-                        this.waitForSpawn = true;
-                        this.playAudio("ugh");
                         ws.sendJson({
                             hit: {   
                                 id: ws.playerId,
@@ -255,6 +272,8 @@ class Game {
                             }
                         });
                         this.scene.remove(sc[i]);
+                        this.waitForSpawn = true;
+                        this.playAudio("ugh");
                     }
                     else{
                         sc[i].position.add(
@@ -266,15 +285,6 @@ class Game {
                 }
             }   
         }
-
-        //center rotating cube
-        const mesh = this.scene.getObjectByName("rotateCube");
-        mesh.rotation.x += 0.01;
-        mesh.rotation.y += 0.02;
-
-        this.renderer.render(this.scene, this.camera);
-        requestAnimationFrame(() => { this.animate(); });
-        this.stats.end();
     }
 
     newAvatar(obj) {
@@ -366,9 +376,7 @@ class Game {
     }
 
     playAudio(name) {
-        try {
-            this.audio[name].play();
-        } catch (error) {}
+        this.audio[name].play();
     }
 
     initPointerlock(){

@@ -23,7 +23,8 @@ wss.on('connection', function(ws) {
     var msg = JSON.parse(msg);
     //console.log(msg);
 
-    if(msg.rp) {
+    if(msg.lTest) { sendJson(ws, msg); return;}
+    else if(msg.rp) {
       client.nick = msg.rp.nick ? msg.rp.nick : client.id;
 
       //assign id to new player
