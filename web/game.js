@@ -11,7 +11,7 @@ class Game {
         //Loading manager
         this.manager = new THREE.LoadingManager();
         let progressBar = document.createElement("div");
-        progressBar.className = "progressBar";
+        progressBar.id = "progressBar";
         document.body.appendChild(progressBar);
 
         this.manager.onLoad = () => {
@@ -35,7 +35,7 @@ class Game {
                 this.stats1.start();
                 this.animate(); 
                 this.stats1.end();
-            }, 16.5);
+            }, 16.75);
             this.render();
         };
         this.manager.onProgress = function ( url, itemsLoaded, itemsTotal ) {
@@ -45,6 +45,43 @@ class Game {
         this.manager.onError = function ( url ) {
             progressBar.textContent = 'There was an error loading ' + url;
         };
+
+        //preload textures
+        this.textures = {
+            "textures/skybox/left.jpg" : {type : "texture"},
+            "textures/skybox/right.jpg" : {type : "texture"},
+            "textures/skybox/back.jpg" : {type : "texture"},
+            "textures/skybox/front.jpg" : {type : "texture"},
+            "textures/skybox/bottom.jpg" : {type : "texture"},
+            "textures/skybox/top.jpg" : {type : "texture"},
+            "textures/water/waternormals.jpg" : {type : "texture", fn : function ( texture ) {
+                texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+            }},
+            "textures/concrete/concrete_b.jpg" : {type : "texture"},
+            "textures/concrete/concrete_d.jpg" : {type : "texture"},
+            "textures/concrete/concrete_s.jpg" : {type : "texture"},
+            "textures/metal/Metal06_nrm.jpg" : {type : "texture"},
+            "textures/metal/Metal06_rgh.jpg" : {type : "texture"},
+            "textures/metal/Metal06_met.jpg" : {type : "texture"},
+            "skyboxCube" : {type : "cubeTexture", urls : [
+                "textures/skybox/left.jpg",
+                "textures/skybox/right.jpg",
+                "textures/skybox/back.jpg",
+                "textures/skybox/front.jpg",
+                "textures/skybox/bottom.jpg",
+                "textures/skybox/top.jpg",
+            ]},
+
+        };
+
+        for (const key in this.textures) {
+            if (this.textures[key].type === "texture") {
+                this.textures[key] = new THREE.TextureLoader(this.manager).load(key, this.textures[key].fn); 
+            }
+            else if(this.textures[key].type === "cubeTexture") {
+                this.textures[key] = new THREE.CubeTextureLoader(this.manager).load(this.textures[key].urls); 
+            }      
+        }
 
         //lights
         let ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
@@ -71,7 +108,7 @@ class Game {
         let materialArray = [];
         for (let i = 0; i < 6; i++)
             materialArray.push( new THREE.MeshBasicMaterial({
-            map: new THREE.TextureLoader(this.manager).load("textures/skybox/" + directions[i] + ".jpg"),
+            map: this.textures["textures/skybox/" + directions[i] + ".jpg"],
             side: THREE.BackSide,
             wireframe:this.USE_WIREFRAME
         }));
@@ -98,9 +135,7 @@ class Game {
             {
                 textureWidth: 1024,
                 textureHeight: 1024,
-                waterNormals: new THREE.TextureLoader(this.manager).load( 'textures/water/waternormals.jpg', function ( texture ) {
-                    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-                }),
+                waterNormals: this.textures['textures/water/waternormals.jpg'],
                 alpha: 0.9,
                 sunDirection: this.sun.position.clone().normalize(),
                 sunColor: 0xffffff,
@@ -323,29 +358,19 @@ class Game {
     }
 
     newAvatar(obj) {
-        const path = "textures/skybox/";
-        const ed = ".jpg";
-        const urls  = [
-            path+"left"+ed,
-            path+"right"+ed,
-            path+"back"+ed,
-            path+"front"+ed,
-            path+"bottom"+ed,
-            path+"top"+ed
-        ];
         const avatar = new THREE.Mesh(
             new THREE.BoxGeometry(1,1,1),
             new THREE.MeshStandardMaterial({
                 color: obj.color,
                 roughness: 0.4,
                 metalness: 1,
-                normalMap: new THREE.TextureLoader(this.manager).load("textures/metal/Metal06_nrm.jpg"),
+                normalMap: this.textures["textures/metal/Metal06_nrm.jpg"],
                 normalScale: new THREE.Vector2( 1, - 1 ), // why does the normal map require negation in this case?
-                roughnessMap: new THREE.TextureLoader(this.manager).load("textures/metal/Metal06_rgh.jpg"),
-                metalnessMap: new THREE.TextureLoader(this.manager).load("textures/metal/Metal06_met.jpg"),
-                envMap: new THREE.CubeTextureLoader(this.manager).load(urls), // important -- especially for metals!
+                roughnessMap: this.textures["textures/metal/Metal06_rgh.jpg"],
+                metalnessMap: this.textures["textures/metal/Metal06_met.jpg"],
+                envMap: this.textures["skyboxCube"], // important -- especially for metals!
                 envMapIntensity: 1,
-                wireframe:this.USE_WIREFRAME
+                wireframe: this.USE_WIREFRAME
             })
         );
         avatar.name = String(obj.id);
