@@ -1,6 +1,5 @@
 class Stats {
-    constructor(domEl, option = "fps", rd = 0, udInt = 100) {
-        this.domEl = domEl;
+    constructor(option = "fps", rd = 0, udInt = 100) {
         this.option = option;
         this.rd = rd;
         this.vals = [];
@@ -27,6 +26,15 @@ class Stats {
                     break;
             }
         }, udInt);
+        //Add to Dom
+        this.domElCont = document.getElementById("stats");
+        if (!this.domElCont) {
+            this.domElCont = document.createElement("div");
+            this.domElCont.id = "stats";
+            document.body.appendChild(this.domElCont);
+        }
+        this.domEl = document.createElement("div");
+        this.domElCont.appendChild(this.domEl);
     }
     start(){
         this.t0 = window.performance.now();

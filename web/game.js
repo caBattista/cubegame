@@ -7,8 +7,44 @@ class Game {
         this.bullet = { height:0.4, speed:5, end: 500, gravity: 0 };
         this.keys = {};
         this.audio = {ugh: new Audio('audio/ugh.mp3'), hit: new Audio('audio/hit.mp3') };
-        this.stats0 = new Stats(document.getElementById("stats").children[0], "fps");
-        this.stats1 = new Stats(document.getElementById("stats").children[1], "fps");
+
+        //Loading manager
+        this.manager = new THREE.LoadingManager();
+        let progressBar = document.createElement("div");
+        progressBar.className = "progressBar";
+        document.body.appendChild(progressBar);
+
+        this.manager.onLoad = () => {
+            progressBar.parentNode.removeChild(progressBar);
+
+            let crosshair = document.createElement("div");
+            crosshair.id = "crosshair";
+            document.body.appendChild(crosshair);
+
+            let leaderBoard = document.createElement("div");
+            leaderBoard.id = "leaderBoard";
+            leaderBoard.innerHTML = "<h4>Players</h4><table></table>";
+            document.body.appendChild(leaderBoard);
+
+            this.doneLoading();
+
+            this.stats0 = new Stats("fps");
+            this.stats1 = new Stats("fps");
+            //start animaiton
+            setInterval(() => { this.stats0.start();
+                this.stats1.start();
+                this.animate(); 
+                this.stats1.end();
+            }, 16.5);
+            this.render();
+        };
+        this.manager.onProgress = function ( url, itemsLoaded, itemsTotal ) {
+            progressBar.textContent = 
+                'Loading: ' + url.replace(/^.*[\\\/]/, '') + ' (' + itemsLoaded + ' of ' + itemsTotal + ')';
+        };
+        this.manager.onError = function ( url ) {
+            progressBar.textContent = 'There was an error loading ' + url;
+        };
 
         //lights
         let ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
@@ -35,7 +71,7 @@ class Game {
         let materialArray = [];
         for (let i = 0; i < 6; i++)
             materialArray.push( new THREE.MeshBasicMaterial({
-            map: new THREE.TextureLoader().load("textures/skybox/" + directions[i] + ".jpg"),
+            map: new THREE.TextureLoader(this.manager).load("textures/skybox/" + directions[i] + ".jpg"),
             side: THREE.BackSide,
             wireframe:this.USE_WIREFRAME
         }));
@@ -62,7 +98,7 @@ class Game {
             {
                 textureWidth: 1024,
                 textureHeight: 1024,
-                waterNormals: new THREE.TextureLoader().load( 'textures/water/waternormals.jpg', function ( texture ) {
+                waterNormals: new THREE.TextureLoader(this.manager).load( 'textures/water/waternormals.jpg', function ( texture ) {
                     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
                 }),
                 alpha: 0.9,
@@ -133,13 +169,6 @@ class Game {
         });
 
         this.initPointerlock();
-        //start animaiton
-        setInterval(() => { this.stats0.start();
-            this.stats1.start();
-            this.animate(); 
-            this.stats1.end();
-        }, 16.5);
-        this.render();
     }
 
     render(){
@@ -310,11 +339,11 @@ class Game {
                 color: obj.color,
                 roughness: 0.4,
                 metalness: 1,
-                normalMap: new THREE.TextureLoader().load("textures/metal/Metal06_nrm.jpg"),
+                normalMap: new THREE.TextureLoader(this.manager).load("textures/metal/Metal06_nrm.jpg"),
                 normalScale: new THREE.Vector2( 1, - 1 ), // why does the normal map require negation in this case?
-                roughnessMap: new THREE.TextureLoader().load("textures/metal/Metal06_rgh.jpg"),
-                metalnessMap: new THREE.TextureLoader().load("textures/metal/Metal06_met.jpg"),
-                envMap: new THREE.CubeTextureLoader().load(urls), // important -- especially for metals!
+                roughnessMap: new THREE.TextureLoader(this.manager).load("textures/metal/Metal06_rgh.jpg"),
+                metalnessMap: new THREE.TextureLoader(this.manager).load("textures/metal/Metal06_met.jpg"),
+                envMap: new THREE.CubeTextureLoader(this.manager).load(urls), // important -- especially for metals!
                 envMapIntensity: 1,
                 wireframe:this.USE_WIREFRAME
             })
@@ -420,6 +449,8 @@ class Game {
     playAudio(name) {
         this.audio[name].play();
     }
+
+    doneLoading() {}
 
     initPointerlock(){
         this.havePointerLock = 'pointerLockElement' in document ||
