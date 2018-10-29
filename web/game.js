@@ -42,9 +42,6 @@ class Game {
             progressBar.textContent = 
                 'Loading: ' + url.replace(/^.*[\\\/]/, '') + ' (' + itemsLoaded + ' of ' + itemsTotal + ')';
         };
-        this.manager.onError = function ( url ) {
-            progressBar.textContent = 'There was an error loading ' + url;
-        };
 
         //preload textures
         this.textures = {
@@ -57,9 +54,18 @@ class Game {
             "textures/water/waternormals.jpg" : {type : "texture", fn : function ( texture ) {
                 texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
             }},
-            "textures/concrete/concrete_b.jpg" : {type : "texture"},
-            "textures/concrete/concrete_d.jpg" : {type : "texture"},
-            "textures/concrete/concrete_s.jpg" : {type : "texture"},
+            "textures/concrete/concrete_b.png" : {type : "texture", fn : function ( texture ) {
+                texture.repeat.set(512, 512);
+                texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+            }},
+            "textures/concrete/concrete_d.png" : {type : "texture", fn : function ( texture ) {
+                texture.repeat.set(512, 512);
+                texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+            }},
+            "textures/concrete/concrete_s.png" : {type : "texture", fn : function ( texture ) {
+                texture.repeat.set(512, 512);
+                texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+            }},
             "textures/metal/Metal06_nrm.jpg" : {type : "texture"},
             "textures/metal/Metal06_rgh.jpg" : {type : "texture"},
             "textures/metal/Metal06_met.jpg" : {type : "texture"},
@@ -77,9 +83,11 @@ class Game {
         for (const key in this.textures) {
             if (this.textures[key].type === "texture") {
                 this.textures[key] = new THREE.TextureLoader(this.manager).load(key, this.textures[key].fn); 
+                this.textures[key].anisotropy = 16;
             }
             else if(this.textures[key].type === "cubeTexture") {
                 this.textures[key] = new THREE.CubeTextureLoader(this.manager).load(this.textures[key].urls); 
+                this.textures[key].anisotropy = 16;            
             }      
         }
 
@@ -122,7 +130,13 @@ class Game {
         //floor
         const meshFloor = new THREE.Mesh(
             new THREE.PlaneGeometry(250,250, 10,10),
-            new THREE.MeshPhongMaterial({color:0xcccccc, wireframe:this.USE_WIREFRAME})
+            new THREE.MeshPhongMaterial({
+                map: this.textures["textures/concrete/concrete_d.png"],
+                bumpMap: this.textures["textures/concrete/concrete_b.png"],
+                specularMap: this.textures["textures/concrete/concrete_s.png"],
+                //color: 0xcccccc,
+                wireframe: this.USE_WIREFRAME
+            })
         );
         meshFloor.rotation.x -= Math.PI / 2;
         meshFloor.receiveShadow = true;
@@ -369,7 +383,7 @@ class Game {
                 roughnessMap: this.textures["textures/metal/Metal06_rgh.jpg"],
                 metalnessMap: this.textures["textures/metal/Metal06_met.jpg"],
                 envMap: this.textures["skyboxCube"], // important -- especially for metals!
-                envMapIntensity: 1,
+                envMapIntensity: 2,
                 wireframe: this.USE_WIREFRAME
             })
         );
