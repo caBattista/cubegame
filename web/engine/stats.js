@@ -16,13 +16,13 @@ class Stats {
             avMsBtFr /= i;
             switch(this.option) {
                 case "fps":
-                    this.domEl.textContent = Number((1000/avMsBtFr).toFixed(rd));
+                    this.domEl.textContent = "fps: " + Number((1000/avMsBtFr).toFixed(rd));
                     break;
                 case "msBtFr":
-                    this.domEl.textContent = Number(avMsBtFr.toFixed(rd));
+                    this.domEl.textContent = "msBtFr: " + Number(avMsBtFr.toFixed(rd));
                     break;
                 case "msFr":
-                    this.domEl.textContent = Number(avMsFr.toFixed(rd));
+                    this.domEl.textContent = "msFr: " + Number(avMsFr.toFixed(rd));
                     break;
             }
         }, udInt);

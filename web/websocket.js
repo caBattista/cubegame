@@ -19,7 +19,6 @@ class Websocket {
 
     handleMessage(msgString) {
         let msg = JSON.parse(msgString);
-
         if(msg.ns){
             this.playerId = msg.ns.id;
             this.players.push(msg.ns);
@@ -47,40 +46,32 @@ class Websocket {
                     });
                 }
             }, 33);
-        }
-        else if(msg.np){
+        } else if(msg.np) {
             if (msg.np.id !== this.playerId) {
                 this.players.push(msg.np);
                 game.newAvatar(msg.np);
             }
-        }
-        else if(msg.udp){
+        } else if(msg.udp) {
             game.setPlayer(msg.udp.id, msg.udp.loc);
-        }
-        else if(msg.nb){
+        } else if(msg.nb) {
             game.newBullet(msg,true);
-        }
-        else if(msg.sp){
+        } else if(msg.sp) {
             msg.sp.id = this.playerId;
             game.setSelf(msg.sp);
-        }
-        else if(msg.hit){
+        } else if(msg.hit) {
             if(msg.hit.hitter === this.playerId){
                 if(game.lastHitTime !== undefined){
                     console.log(new Date().getTime() - game.lastHitTime);
                     game.lastHitTime = undefined;
-                }
-                else{
+                } else {
                     console.log("before");
                     game.lastHitTime = undefined; 
                 }
                 game.playAudio("hit");
             }
-        }
-        else if(msg.lTest){
+        } else if(msg.lTest) {
             console.log(new Date().getTime()-this.lTestTime);
-        }
-        else if(msg.lb){
+        } else if(msg.lb) {
             let table = document.getElementById("leaderBoard").children[1];
             table.innerHTML = "<tr><th></th><th>nick</th><th>k</th><th>d</th></tr>";
             for (var key in msg.lb) {
@@ -106,8 +97,7 @@ class Websocket {
                 tr.appendChild(td2);
                 tr.appendChild(td3);
             }
-        }
-        else if(msg.dc){
+        } else if(msg.dc) {
             //remove player from players
             for (let i = 0; i < this.players.length; i++) {
                 if (this.players[i].id === msg.dc.id) {
@@ -117,28 +107,23 @@ class Websocket {
             }
         }
     }
-
     requestPlayer() {
         this.playerId = -1;
         this.players = [];
-        let nick = "";//prompt("Plase select a nickname.")
+        let nick = prompt("Plase select a nickname.");
         this.sendJson({rp:{nick: nick}});
     }
-
     sendJson(json) {
         this.ws.send(JSON.stringify(json));
     }
-
     rndFlt(num, dec = this.precision){
         return parseFloat(num.toFixed(dec));
     }
-
     getPlayer(id){
         return this.players.find(el => {
             return el.id === id ? el : null;
-        });;
+        });
     }
-
     latencyTest(){
         this.lTestTime = new Date().getTime();
         this.ws.send(JSON.stringify({lTest:this.playerId}));

@@ -1,10 +1,11 @@
 class Game {
     constructor() {
         //settings
+        this.graphics = confirm("Do you want high quality graphics?");
         this.USE_WIREFRAME = false;
         this.scene = new THREE.Scene();
         this.player = { height:0.5, speed:0.5, turnSpeed:Math.PI*0.005, gravity: 0.3 };
-        this.bullet = { height:0.4, speed:5, end: 500, gravity: 0 };
+        this.bullet = { height:0.4, speed:2, end: 500, gravity: 0 };
         this.keys = {};
         this.audio = {ugh: new Audio('audio/ugh.mp3'), hit: new Audio('audio/hit.mp3') };
 
@@ -31,11 +32,11 @@ class Game {
             this.stats0 = new Stats("fps");
             this.stats1 = new Stats("fps");
             //start animaiton
-            setInterval(() => { this.stats0.start();
-                this.stats1.start();
-                this.animate(); 
-                this.stats1.end();
-            }, 16.75);
+            setInterval(() => {
+                    this.stats1.start();
+                    this.animate(); 
+                    this.stats1.end();
+            }, 16);
             this.render();
         };
         this.manager.onProgress = function ( url, itemsLoaded, itemsTotal ) {
@@ -97,14 +98,16 @@ class Game {
 
         this.sun = new THREE.DirectionalLight (0xffffff, 0.5);
         this.sun.castShadow = true;
-        this.sun.shadow.camera.left = -200;
-        this.sun.shadow.camera.right = 200;
-        this.sun.shadow.camera.top = 200;
-        this.sun.shadow.camera.bottom = -200;
-        this.sun.shadow.mapSize.width = 2048;//32768;
-        this.sun.shadow.mapSize.height = 2048;//32768;
-        this.sun.shadow.camera.near = 0.1;
-        this.sun.shadow.camera.far = 1000;
+        if(this.graphics){
+            this.sun.shadow.camera.left = -200;
+            this.sun.shadow.camera.right = 200;
+            this.sun.shadow.camera.top = 200;
+            this.sun.shadow.camera.bottom = -200;
+            this.sun.shadow.mapSize.width = 2048;//32768;
+            this.sun.shadow.mapSize.height = 2048;//32768;
+            this.sun.shadow.camera.near = 0.1;
+            this.sun.shadow.camera.far = 1000;
+        }
         this.sun.position.set(170, 130, 280);
         this.sun.lookAt(new THREE.Vector3(0,this.player.height,0));
         // this.scene.add(new THREE.DirectionalLightHelper( this.sun ));
@@ -128,37 +131,65 @@ class Game {
         this.scene.add( skyBox );
 
         //floor
-        const meshFloor = new THREE.Mesh(
-            new THREE.PlaneGeometry(250,250, 10,10),
-            new THREE.MeshPhongMaterial({
-                map: this.textures["textures/concrete/concrete_d.png"],
-                bumpMap: this.textures["textures/concrete/concrete_b.png"],
-                specularMap: this.textures["textures/concrete/concrete_s.png"],
-                //color: 0xcccccc,
-                wireframe: this.USE_WIREFRAME
-            })
-        );
-        meshFloor.rotation.x -= Math.PI / 2;
-        meshFloor.receiveShadow = true;
-        this.scene.add(meshFloor);
+        if(this.graphics){
+            this.meshFloor = new THREE.Mesh(
+                new THREE.PlaneGeometry(250,250, 10,10),
+                new THREE.MeshPhongMaterial({
+                    map: this.textures["textures/concrete/concrete_d.png"],
+                    bumpMap: this.textures["textures/concrete/concrete_b.png"],
+                    specularMap: this.textures["textures/concrete/concrete_s.png"],
+                    //color: 0xcccccc,
+                    wireframe: this.USE_WIREFRAME
+                })
+            );
+            this.meshFloor.rotation.x -= Math.PI / 2;
+            this.meshFloor.receiveShadow = true;
+        } else {
+            this.meshFloor = new THREE.Mesh(
+                new THREE.PlaneGeometry(250,250, 10,10),
+                new THREE.MeshPhongMaterial({
+                    //color: 0xcccccc,
+                    wireframe: this.USE_WIREFRAME
+                })
+            );
+            this.meshFloor.rotation.x -= Math.PI / 2;
+            this.meshFloor.receiveShadow = false;
+        }
+        this.scene.add(this.meshFloor);
 
-        //floor
+        //water
         let waterGeometry = new THREE.PlaneBufferGeometry( 8000, 8000 );
-        this.water = new THREE.Water(
-            waterGeometry,
-            {
-                textureWidth: 1024,
-                textureHeight: 1024,
-                waterNormals: this.textures['textures/water/waternormals.jpg'],
-                alpha: 0.9,
-                sunDirection: this.sun.position.clone().normalize(),
-                sunColor: 0xffffff,
-                waterColor: 0x00190f,
-                distortionScale:  5,
-                fog: this.scene.fog !== undefined
-            }
-        );
-        this.water.material.uniforms.size.value = 1;
+        if(this.graphics){
+            this.water = new THREE.Water(
+                waterGeometry,
+                {
+                    textureWidth: 1024,
+                    textureHeight: 1024,
+                    waterNormals: this.textures['textures/water/waternormals.jpg'],
+                    alpha: 0.9,
+                    sunDirection: this.sun.position.clone().normalize(),
+                    sunColor: 0xffffff,
+                    waterColor: 0x00190f,
+                    distortionScale:  5,
+                    fog: this.scene.fog !== undefined,
+                    wireframe: this.USE_WIREFRAME
+                }
+            );
+            this.water.material.uniforms.size.value = 1;
+        } else{
+            this.water = new THREE.Water(
+                waterGeometry,
+                {
+                    alpha: 0.9,
+                    sunDirection: this.sun.position.clone().normalize(),
+                    sunColor: 0xffffff,
+                    waterColor: 0x00190f,
+                    distortionScale:  5,
+                    fog: this.scene.fog !== undefined,
+                    wireframe: this.USE_WIREFRAME
+                }
+            );
+        }
         this.water.position.set(0,-1,0);
         this.water.rotation.x = - Math.PI / 2;
         this.scene.add( this.water );
@@ -363,7 +394,7 @@ class Game {
                         //console.log(playerObj.geometry);
                         if (ws.playerId !== player.id && this.colisionDetect(playerObj, sc[i])) {
                             this.lastHitTime = new Date().getTime();
-                            this.scene.remove(sc[i]);
+                            // this.scene.remove(sc[i]);
                         }
                     }
                 }
@@ -372,21 +403,31 @@ class Game {
     }
 
     newAvatar(obj) {
-        const avatar = new THREE.Mesh(
-            new THREE.BoxGeometry(1,1,1),
-            new THREE.MeshStandardMaterial({
-                color: obj.color,
-                roughness: 0.4,
-                metalness: 1,
-                normalMap: this.textures["textures/metal/Metal06_nrm.jpg"],
-                normalScale: new THREE.Vector2( 1, - 1 ), // why does the normal map require negation in this case?
-                roughnessMap: this.textures["textures/metal/Metal06_rgh.jpg"],
-                metalnessMap: this.textures["textures/metal/Metal06_met.jpg"],
-                envMap: this.textures["skyboxCube"], // important -- especially for metals!
-                envMapIntensity: 2,
-                wireframe: this.USE_WIREFRAME
-            })
-        );
+        if(this.graphics){
+            var avatar = new THREE.Mesh(
+                new THREE.BoxGeometry(1,1,1),
+                new THREE.MeshStandardMaterial({
+                    color: obj.color,
+                    roughness: 0.4,
+                    metalness: 1,
+                    normalMap: this.textures["textures/metal/Metal06_nrm.jpg"],
+                    normalScale: new THREE.Vector2( 1, - 1 ), // why does the normal map require negation in this case?
+                    roughnessMap: this.textures["textures/metal/Metal06_rgh.jpg"],
+                    metalnessMap: this.textures["textures/metal/Metal06_met.jpg"],
+                    envMap: this.textures["skyboxCube"], // important -- especially for metals!
+                    envMapIntensity: 2,
+                    wireframe: this.USE_WIREFRAME
+                })
+            );
+        } else {
+            var avatar = new THREE.Mesh(
+                new THREE.BoxGeometry(1,1,1),
+                new THREE.MeshStandardMaterial({
+                    color: obj.color,
+                    wireframe: this.USE_WIREFRAME
+                })
+            );
+        }
         avatar.name = String(obj.id);
         avatar.receiveShadow = true;
         avatar.castShadow = true;
@@ -399,7 +440,7 @@ class Game {
         let bullet;
         if (fromWS) {
             bullet = new THREE.Mesh(
-                new THREE.BoxGeometry(0.2,0.2,this.bullet.speed*2),
+                new THREE.BoxGeometry(0.2,0.2, this.bullet.speed),
                 new THREE.MeshPhongMaterial({color: ws.getPlayer(msg.nb.id.split("_")[1]).color, wireframe:this.USE_WIREFRAME})
             );
             bullet.receiveShadow = true;
@@ -408,10 +449,9 @@ class Game {
             bullet.name = msg.nb.id;
             bullet.position.set(msg.nb.loc.x, msg.nb.loc.y, msg.nb.loc.z);
             bullet.rotation.set(msg.nb.loc._x, msg.nb.loc._y, msg.nb.loc._z);   
-        }
-        else{
+        } else {
             bullet = new THREE.Mesh(
-                new THREE.BoxGeometry(0.2,0.2,this.bullet.speed*2),
+                new THREE.BoxGeometry(0.2,0.2, this.bullet.speed),
                 new THREE.MeshPhongMaterial({color: ws.getPlayer(ws.playerId).color, wireframe:this.USE_WIREFRAME})
             );
             bullet.receiveShadow = true;
@@ -439,10 +479,7 @@ class Game {
         bullet.startPos = JSON.stringify(bullet.position);
         this.scene.add(bullet);
     }
-
-    // colisionDetect(obj1, obj2, dist = 0.8) {
-    //     return obj1.position.distanceTo(obj2.position) < dist ? true : false;
-    // }
+    
     colisionDetect(obj1, obj2) {
         //requirement: both objs need to be in same space (no parenting)
         for (var vertexIndex = 0; vertexIndex < obj1.geometry.vertices.length; vertexIndex++)
