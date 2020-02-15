@@ -1,112 +1,215 @@
-//HTTP
+//Server start
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 1337;
 
-app.use(express.static('web'));
-
-const server = app.listen(port, function () {
-  require('dns').lookup(require('os').hostname(), function (err, add, fam) {
-    console.log('server started on ' + add + ':' + port);
+const server = app.listen(port, () => {
+  require('dns').lookup(require('os').hostname(), (err, add, fam) => {
+    console.log('Webserver started on ' + add + ':' + port);
   });
 });
 
-//WEBSOCKET
-const WebSocket = require('ws');
-const wss = new WebSocket.Server({ server : server });//same port as express
-var clients = {};
+//Database start
+const Database = require("./server/database.js");
+const db = new Database({ url: "mongodb://localhost:27017/cubegame" });
 
-wss.on('connection', function(ws) {
-  let client = initClient(ws);
+//Host files
+const sfo = { root: __dirname + '/web/' }
 
-  ws.on('message', function(msg) {
-    var msg = JSON.parse(msg);
-    //console.log(msg);
+const publicFiles = [
+  '/main/index.html',
+  '/main/favicon.png',
+  '/util/loader.js',
+  '/game/game.js',
+  '/util/ws.js',
+  '/ui/ui.js',
+  '/ui/login/login.js',
+  '/ui/login/login.css'
+]
 
-    if(msg.lTest) { sendJson(ws, msg); return;}
-    else if(msg.rp) {
-      client.nick = msg.rp.nick ? msg.rp.nick : client.id;
+app.use('/', async (req, res) => {
 
-      //assign id to new player
-      sendJson(ws, {ns: {id: client.id, nick: client.nick, color: client.color, loc: client.loc}} );
-      
-      //load players to new player
-      for (var key in clients) {
-        if (key !== client.id) {
-          sendJson(ws, {np: {id: clients[key].id, nick: clients[key].nick, color: clients[key].color, loc: clients[key].loc}} );      
-        }
-      }
+  let path = req.originalUrl.split('?')[0];
+  path = path === '/' ? '/main/index.html' : path;
 
-      //notify other players of new player
-      broadcast({np: {id:client.id, nick: client.nick, color: client.color, loc: client.loc}}, client.id);
+  console.log("EX: requested file ", req.query.clientId, " ", path);
 
-      updateLB();
-      return;
-    }
-    else if(msg.udp) client.loc = msg.udp.loc;
-    else if(msg.hit) {
-      sendJson(ws, {sp: {loc: getRndLoc(125)}} );
-      if (msg.hit.hitter) clients[msg.hit.hitter].k++;
-      clients[msg.hit.id].d++;
-      updateLB();
-    }
+  if (publicFiles.includes(path)) { res.sendFile(path, sfo); }
+  else if (req.query.clientId) {
+    //Check message
+    const valRes = Joi.validate(req.query.clientId, Joi.string().alphanum().required());
+    if (valRes.error !== null) { res.status(403).send('Invalid Message'); return; }
 
-    broadcast(msg, client.id);
-  });
+    //Check if WSServer knows Client
+    if (!wss.clients[req.query.clientId]) { res.status(403).send('Sorry! You cant see that.'); return; }
 
-  ws.on('close', function(msg) {
-    broadcast({dc: {id: client.id}}, client.id);
-    delete clients[client.id];
-    updateLB();
-  });
+    //Check if DB knows Client
+    const dbRes = await db.getUser({ clientId: req.query.clientId });
+    if (dbRes.length !== 1) { res.status(403).send('Sorry! You cant see that.'); return; }
+
+    res.sendFile(path, sfo);
+  }
+  else { res.status(404).send('404'); }
 });
 
-//##################################  helper functions ###########################################
-const broadcast = (data, dontBCId) => {
-  for (var key in clients) {
-    if (clients[key].ws.readyState === WebSocket.OPEN && key != dontBCId) {
-      sendJson(clients[key].ws, data);
+//Websocket start
+const WSServer = require("./server/wsserver.js");
+const wss = new WSServer(server);
+
+//Request Validation
+const Joi = require('joi');
+
+//Native csprng
+const crypto = require('crypto');
+
+//Modern Hashing
+const argon2 = require('argon2');
+const pepper = "|>3|>|>3|2";
+
+// var os = require('os');
+// setInterval(() => {
+//   //console.log("WS: ", wss.listClients());
+//   //console.log(os.cpus());
+//   console.log("free mem ",Math.round(os.freemem() / 1024 / 1024 / 1024 * 10) / 10);
+// }, 100);
+
+//Request handeling
+wss.on("login", async (msg, client) => {
+
+  //Check message
+  const valRes = Joi.validate(msg, Joi.object().keys({
+    username: Joi.string().alphanum().min(3).max(30),
+    password: Joi.string().alphanum().min(3).max(30),
+  }), { presence: "required", stripUnknown: true });
+  if (valRes.error !== null) { wss.send(client, { access: false }); return; }
+  //console.log("checked message");
+
+  //Check db for user
+  const dbRes = await db.getUser({ username: msg.username });
+  if (dbRes.length !== 1) { wss.send(client, { access: false }); return; }
+  //console.log("checked db for user",dbRes );
+
+  //Check password
+  const pswRes = await argon2.verify(dbRes[0].password, dbRes[0].salt + msg.password + pepper)
+  if (pswRes !== true) { wss.send(client, { access: false }); return; }
+  //console.log("checked password");
+
+  //close connection if same client is logged in
+  await wss.closeConnection(dbRes[0].clientId);
+  //console.log("removed ther client", dbRes[0].clientId);
+
+  //Add clientId to db
+  const dbRes2 = await db.addUserClientId({ username: msg.username }, client.id);
+  if (dbRes2 !== true) { wss.send(client, { access: false }); return; }
+  //console.log("added clientId to db");
+
+  wss.send(client, { access: true });
+});
+
+wss.on("register", async (msg, client) => {
+
+  //Check message
+  const valRes = Joi.validate(msg, Joi.object().keys({
+    username: Joi.string().alphanum().min(3).max(30),
+    password: Joi.string().alphanum().min(3).max(30),
+  }), { presence: "required", stripUnknown: true });
+  if (valRes.error !== null) { wss.send(client, { access: false }); return; }
+  //console.log("checked message");
+
+  //Check db for user (prevent two users with same username)
+  const dbRes = await db.getUser({ username: msg.username });
+  if (dbRes.length !== 0) { wss.send(client, { access: false }); return; }
+  //console.log("checked db for user");
+
+  //Create salt, password, client id
+  msg.salt = crypto.randomBytes(16).toString('hex');
+  msg.password = await argon2.hash(msg.salt + msg.password + pepper);
+  msg.clientId = client.id;
+  //console.log("created salt, password, client id");
+
+  //create default settings
+  msg.settings = {
+    gameplay: {
+
+    },
+    controls: {
+      moveForward: "KeyW",
+      moveBackward: "KeyS",
+      moveLeft: "KeyA",
+      moveRight: "KeyD",
+      jump: "Space",
+      sprint: "ShiftLeft",
+      crouch: "AltLeft",
+      interact: "KeyE",
+      melee: "KeyF",
+      granade: "KeyG"
+    },
+    graphics: {
+      quality: "High"
     }
   }
-};
 
-const sendJson = (ws, json) => {
-    ws.send(JSON.stringify(json));
-}
+  //Add user to db
+  const dbRes2 = await db.addUser(msg);
+  if (dbRes2 !== true) { wss.send(client, { access: false }); return; }
+  //console.log("added user to db");
 
-const initClient = (ws) => {
-  let clientId = Math.random().toString(36).substr(2, 16);//generate unique id
-  clients[clientId] = {id: clientId, k: 0, d: 0, color: getRandomColor(), loc:getRndLoc(125), ws: ws};
-  return clients[clientId];
-}
+  wss.send(client, { access: true });
+});
 
-const updateLB = () => {
-  let sortedIds = Object.keys(clients).sort((a,b) => { 
-    return (clients[b].k - clients[b].d) - (clients[a].k - clients[a].d)
-  });
-  let lb = {lb:{}}
-  let i = 0;
-  for (const key of sortedIds) {
-    lb.lb[key] = {k:clients[key].k, d:clients[key].d};
-    i++;
-    if(i >= 10) break;
+wss.on("deleteUser", async (msg, client) => {
+  const dbRes = await db.deleteUser(client.id);
+  if (dbRes !== true) { return; }
+  wss.send(client, { message: "deleted User from db" });
+  //console.log("deleted User from db");
+});
+
+wss.on("disconnect", async (msg, client) => {
+  const dbRes = await db.removeUserClientId(client.id);
+  if (dbRes !== true) { return; }
+  //console.log("removed clientId from db");
+});
+
+// Main Menu
+wss.on("maps", async (msg, client) => {
+  if (msg.action === "create") {
+    const dbRes = await db.addMap({ type: "map1", maxPlayers: 10, players: [] });
+    if (dbRes !== true) { wss.send(client, { message: "error creating map" }); return; }
+    wss.send(client, { message: "created map successfully" }); return;
+  } else if (msg.action === "get") {
+    const dbRes = await db.getMaps();
+    if (typeof (dbRes) === "object") { wss.send(client, dbRes); return; }
+    else { wss.send(client, { message: "error getting map" }); return; }
+  } else { wss.send(client, { message: "error with maps" }); return; }
+});
+
+wss.on("settings", async (msg, client) => {
+  if (msg.action === "get") {
+    const dbRes = await db.getSettings(client.id);
+    if (typeof (dbRes) === "object") { wss.send(client, dbRes); return; }
+    else { wss.send(client, { message: "error getting map" }); return; }
+  } else if (msg.action === "set") {
+    const dbRes = await db.setSettings(client.id, msg);
+    if (dbRes !== true) { wss.send(client, { message: "error changing settings" }); return; }
+    wss.send(client, { message: "changed settings successfully" }); return;
   }
-  broadcast(lb);
-}
 
-const getRandomColor = () => {
-  var letters = '0123456789ABCDEF';
-  var color = '#';
-  for (var i = 0; i < 6; i++) {
-    color += letters[Math.floor(Math.random() * 16)];
-  }
-  return color;
-}
+  else { wss.send(client, { message: "error with settings" }); return; }
+});
 
-const getRnd = (min, max) => {
-  return Math.random() * (max - min) + min;
-}
-
-const getRndLoc = (range) => {
-  return {x: getRnd(-range,range), y: 1, z: getRnd(-range,range), _x: 0, _y: 0, _z: 0};
-}
+// //On Close
+// const exitHandler = () => {
+//   db.close();
+//   process.exit();
+// }
+// //so the program will not close instantly
+// process.stdin.resume();
+// //do something when app is closing
+// process.on('exit', exitHandler);
+// //catches ctrl+c event
+// process.on('SIGINT', exitHandler);
+// // catches "kill pid" (for example: nodemon restart)
+// process.on('SIGUSR1', exitHandler);
+// process.on('SIGUSR2', exitHandler);
+// //catches uncaught exceptions
+// process.on('uncaughtException', exitHandler);

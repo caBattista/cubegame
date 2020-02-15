@@ -1,0 +1,17 @@
+body{
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+div{
+    width: 50vw;
+    height: 50vh;
+    background-color: #aaa;
+    border-radius: 20px;
+}
+
+form{
+    width: 100%;
+}

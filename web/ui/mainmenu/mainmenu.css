@@ -1,0 +1,17 @@
+body{
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    font-family: sans-serif;
+}
+.side{
+    flex: 0 0 200px;
+    background-color: #eee;
+    text-align: center;
+}
+.stage{
+    flex: 1;
+}
+.active{
+    background-color: green;
+}

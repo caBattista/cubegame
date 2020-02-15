@@ -1,0 +1,38 @@
+.settings{
+    padding: 10px;
+}
+
+.settings *{
+    user-select: none;
+}
+
+.settings > div{
+    border-radius: 3px;
+    background-color: #eee;
+}
+
+.settings > div > div{
+    display: flex;
+    justify-content: space-between;
+    padding: 5px;
+    cursor: pointer;
+
+}
+
+/* .settings > div > div{
+    pointer-events: none;
+} */
+
+.settings > div > div:hover{
+    background-color: #f0f0f0;
+}
+
+.settings > div > div+div{
+    border-top: 1px solid #ddd;
+}
+
+.settings > div > div > input{
+    border: none;
+    border-radius: 3px;
+    text-align: center;
+}
