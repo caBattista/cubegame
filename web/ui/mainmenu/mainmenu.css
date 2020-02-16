@@ -1,17 +1,29 @@
-body{
-    margin: 0;
-    height: 100vh;
+.mainMenuWrapper {
     display: flex;
-    font-family: sans-serif;
+    height: 100vh;
 }
-.side{
+
+.side {
     flex: 0 0 200px;
     background-color: #eee;
     text-align: center;
 }
-.stage{
+
+.side ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.side ul li {
+    padding: 10px 20px;
+    text-align: left;
+}
+
+.stage {
     flex: 1;
 }
-.active{
+
+.active {
     background-color: green;
 }

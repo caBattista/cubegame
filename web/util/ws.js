@@ -7,7 +7,7 @@ class Ws {
             this.ws.onopen = () => {
                 this.ws.onmessage = e => {
                     const data = JSON.parse(e.data);
-                    console.log(data.clientId);
+                    console.log("WS: ", data.clientId);
                     res(data.clientId);
                 };
                 this.ws.onclose = e => {
@@ -23,7 +23,7 @@ class Ws {
         return new Promise((res, rej) => {
             this.ws.send(JSON.stringify({ rqType: rqType, msg: msg }));
             this.ws.onmessage = e => {
-                console.log("ws debug", e.data);
+                console.log("WS: ", e.data);
                 res(JSON.parse(e.data));
             };
         });

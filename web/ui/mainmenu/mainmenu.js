@@ -1,6 +1,6 @@
 class Mainmenu extends Ui {
 
-    constructor(game){
+    constructor(game) {
         super();
         this.game = game;
     }
@@ -17,9 +17,11 @@ class Mainmenu extends Ui {
 
     createLayout(parent) {
         const elements = this.createHTML(`
-            <div class="side"></div>
-            <div class="stage"></div>
-            `, parent, "all");
+            <div class="mainMenuWrapper">
+                <div class="side"></div>
+                <div class="stage"></div>
+            </div>
+            `, parent).children;
         return elements;
     }
 

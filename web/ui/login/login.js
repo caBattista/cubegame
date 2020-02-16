@@ -3,37 +3,37 @@ class Login extends Ui {
     constructor(game) {
         super();
         this.game = game;
-        console.log("login");
     }
 
     async login(ws) {
         return new Promise((resolve, reject) => {
             const el = this.createHTML(`
-            <div>
-                <form>
-                    Uername <input type="text" name="username"><br>
-                    Password <input type="password" name="password"><br>
-                </form>
+            <h1>Please log in</h1>
+            <div class="login">
+                <h3>Username</h3>
+                <input type="text" name="username">
+                <h3>Password</h3>
+                <input type="password" name="password">
+                <br>
                 <input type="submit" value="Submit">
                 <input type="submit" value="Register">
             </div>
-            `, document.body);
+            `, document.body, 1);
             const handleSubmit = async ev => {
-                const res = await this.game.ws.request("login", this.formToJSON(el.children[0]));
+                const res = await this.game.ws.request("login", this.formToJSON(el));
                 if (res.access === true) {
                     document.body.innerHTML = "";
                     resolve();
                 }
             }
-            el.children[0].addEventListener("keyup", function (event) {
-                if (event.keyCode === 13) {
-                    event.preventDefault();
-                    handleSubmit();
-                }
+            el.addEventListener("keyup", ev => {
+                if (ev.keyCode !== 13) { return; }
+                ev.preventDefault();
+                handleSubmit();
             });
-            el.children[1].addEventListener("click", handleSubmit)
-            el.children[2].addEventListener("click", async ev => {
-                const res = await this.game.ws.request("register", this.formToJSON(el.children[0]));
+            el.children[5].addEventListener("click", handleSubmit)
+            el.children[6].addEventListener("click", async ev => {
+                const res = await this.game.ws.request("register", this.formToJSON(el));
                 if (res.access === true) {
                     document.body.innerHTML = "";
                     resolve();

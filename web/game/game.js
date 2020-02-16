@@ -16,7 +16,6 @@ class Game {
 
         //login
         await this.loader.load("ui/login/login", 1);
-
         await new Login(this).login();
         this.loader.unload("ui/login/login");
 
@@ -31,9 +30,12 @@ class Game {
         document.body.innerHTML = "";
         //load Three
         await this.loader.load("engine/three");
-        await this.loader.load("engine/water");
         await this.loader.load("engine/stats");
         await this.loader.load("engine/engine", 1);
-        this.engine = new Engine(this);
+        await this.loader.load("engine/self");
+        await this.loader.load("maps/mountainwaters/water");
+        await this.loader.load("maps/mountainwaters/map");
+        const settings = await this.ws.request("settings", { action: "get" })
+        this.engine = new Engine(this, settings.settings);
     }
 } 

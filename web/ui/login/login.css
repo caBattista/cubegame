@@ -1,17 +1,23 @@
-body{
-    margin: 0;
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+h1{
+    text-align: center;
 }
-div{
-    width: 50vw;
-    height: 50vh;
-    background-color: #aaa;
+
+.login {
+    position: fixed;
+    top: 50vh;
+    left: 50vw;
+    transform: translate(-50%, -50%);
+    box-sizing: border-box;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 3px #aaa;
     border-radius: 20px;
 }
 
-form{
-    width: 100%;
+.login > h3:first-child{
+    margin-top: 0;
+}
+
+.login > input[type=submit]{
+    margin-top: 20px;
 }

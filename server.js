@@ -18,6 +18,7 @@ const sfo = { root: __dirname + '/web/' }
 
 const publicFiles = [
   '/main/index.html',
+  '/main/index.css',
   '/main/favicon.png',
   '/util/loader.js',
   '/game/game.js',
@@ -28,6 +29,10 @@ const publicFiles = [
 ]
 
 app.use('/', async (req, res) => {
+
+  setTimeout(() => {
+
+  }, 1000);
 
   let path = req.originalUrl.split('?')[0];
   path = path === '/' ? '/main/index.html' : path;
@@ -46,7 +51,6 @@ app.use('/', async (req, res) => {
     //Check if DB knows Client
     const dbRes = await db.getUser({ clientId: req.query.clientId });
     if (dbRes.length !== 1) { res.status(403).send('Sorry! You cant see that.'); return; }
-
     res.sendFile(path, sfo);
   }
   else { res.status(404).send('404'); }
@@ -173,7 +177,7 @@ wss.on("disconnect", async (msg, client) => {
 // Main Menu
 wss.on("maps", async (msg, client) => {
   if (msg.action === "create") {
-    const dbRes = await db.addMap({ type: "map1", maxPlayers: 10, players: [] });
+    const dbRes = await db.addMap({ type: msg.type, maxPlayers: 10, players: [] });
     if (dbRes !== true) { wss.send(client, { message: "error creating map" }); return; }
     wss.send(client, { message: "created map successfully" }); return;
   } else if (msg.action === "get") {
