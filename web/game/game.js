@@ -33,6 +33,7 @@ class Game {
         await this.loader.load("engine/stats");
         await this.loader.load("engine/engine", 1);
         await this.loader.load("engine/self");
+        await this.loader.load("engine/controls");
         await this.loader.load("maps/mountainwaters/water");
         await this.loader.load("maps/mountainwaters/map");
         const settings = await this.ws.request("settings", { action: "get" })

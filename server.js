@@ -136,6 +136,9 @@ wss.on("register", async (msg, client) => {
     gameplay: {
 
     },
+    sound: {
+      globalVolume: 100
+    },
     controls: {
       moveForward: "KeyW",
       moveBackward: "KeyS",
@@ -176,6 +179,7 @@ wss.on("disconnect", async (msg, client) => {
 
 // Main Menu
 wss.on("maps", async (msg, client) => {
+  //verification neccessary!
   if (msg.action === "create") {
     const dbRes = await db.addMap({ type: msg.type, maxPlayers: 10, players: [] });
     if (dbRes !== true) { wss.send(client, { message: "error creating map" }); return; }
@@ -188,6 +192,7 @@ wss.on("maps", async (msg, client) => {
 });
 
 wss.on("settings", async (msg, client) => {
+  //verification neccessary!
   if (msg.action === "get") {
     const dbRes = await db.getSettings(client.id);
     if (typeof (dbRes) === "object") { wss.send(client, dbRes); return; }
@@ -197,8 +202,25 @@ wss.on("settings", async (msg, client) => {
     if (dbRes !== true) { wss.send(client, { message: "error changing settings" }); return; }
     wss.send(client, { message: "changed settings successfully" }); return;
   }
-
   else { wss.send(client, { message: "error with settings" }); return; }
+});
+
+const Simulator = require("./server/simulator.js");
+const sim = new Simulator();
+
+//In game
+wss.on("map", async (msg, client) => {
+  //verification neccessary!
+  if (msg.action === "join") {
+    wss.send(client, { access: true });
+    sim.addPlayer(client.id, msg.changes.self);
+  } else if (msg.action === "move") {
+    sim.changePlayer(client.id, msg.changes.self);
+    if (msg.changes.self.position.x > 10) {
+      await wss.closeConnection(client.id);
+    }
+    console.log("MAP:", msg.changes);
+  }
 });
 
 // //On Close

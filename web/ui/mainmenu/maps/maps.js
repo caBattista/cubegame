@@ -21,8 +21,11 @@ class Maps extends Mainmenu {
                     <div>${map.players.length}/${map.maxPlayers}</div>
                     <div>Join</div>
                     </div>`, elements[1]);
-            el.children[2].addEventListener("click", ev => {
-                this.game.joinMap(map._id);
+            el.children[2].addEventListener("click", async ev => {
+                const res = await this.game.ws.request("map", { action: "join", mapId: map._id });
+                if (res.access === true) {
+                    this.game.joinMap(map._id);
+                } else { alert("Can't join map"); }
             })
         })
     }

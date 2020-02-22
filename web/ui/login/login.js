@@ -15,7 +15,7 @@ class Login extends Ui {
                 <h3>Password</h3>
                 <input type="password" name="password">
                 <br>
-                <input type="submit" value="Submit">
+                <input type="submit" value="Log In">
                 <input type="submit" value="Register">
             </div>
             `, document.body, 1);

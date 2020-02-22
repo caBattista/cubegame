@@ -42,37 +42,45 @@ class Self {
         );
     }
 
-    move(direction) {
-        const res = {
-            "forward": () => { this.moveDegRad(0) },
-            "backward": () => { this.moveDegRad(Math.PI) },
-            "left": () => { this.moveDegRad(Math.PI / 2) },
-            "right": () => { this.moveDegRad(-Math.PI / 2) },
-            "up": () => { this.elements.yaw.position.y += this.settings.player.speed },
-            "run": () => {
-                this.settings.player.speed = 0.8;
-                this.settings.player.turnSpeed = Math.PI * 0.02;
-            },
-            "walk": () => {
+    do(option) {
+        switch (option) {
+            case "moveForward": this.moveDegRad(0); break;
+            case "moveBackward": this.moveDegRad(Math.PI); break;
+            case "moveLeft": this.moveDegRad(Math.PI / 2); break;
+            case "moveRight": this.moveDegRad(-Math.PI / 2); break;
+            case "jump": this.elements.yaw.position.y += this.settings.player.speed; break;
+            case "sprint":
+                this.settings.player.speed = 2;
+                break;
+            case "setDefaults":
                 this.settings.player.speed = 0.4;
-                this.settings.player.turnSpeed = Math.PI * 0.005;
-            },
-
-            "rotateLeft": () => { this.elements.yaw.rotation.y += this.settings.player.turnSpeed },
-            "rotateRight": () => { this.elements.yaw.rotation.y -= this.settings.player.turnSpeed },
-            "rotateForward": () => { this.elements.pitch.rotation.x += this.settings.player.turnSpeed }
+                break;
         }
-        res[direction]();
     }
 
-    render(keys) {
-        //movement
-        if (keys[87]) this.move("forward")
-        if (keys[83]) this.move("backward")
-        if (keys[65]) this.move("left")
-        if (keys[68]) this.move("right")
-        if (keys[32]) this.move("up")
-        if (keys[16]) this.move("run")
-        else this.move("walk")
+    moveCam(x, y) {
+        this.elements.yaw.rotation.y -= x * 0.002;
+        this.elements.pitch.rotation.x += y * 0.002;
+    }
+
+    rndFlt(num, dec = 3) {
+        return parseFloat(num.toFixed(dec));
+    }
+
+    getPosRot() {
+        const posRaw = this.elements.pitch.getWorldPosition(new THREE.Vector3());
+        const rotRaw = new THREE.Euler().setFromQuaternion(this.elements.pitch.getWorldQuaternion(new THREE.Quaternion()));
+        return {
+            position: {
+                x: this.rndFlt(posRaw.x),
+                y: this.rndFlt(posRaw.y),
+                z: this.rndFlt(posRaw.z)
+            },
+            rotation: {
+                x: this.rndFlt(rotRaw._x),
+                y: this.rndFlt(rotRaw._y),
+                z: this.rndFlt(rotRaw._z)
+            }
+        };
     }
 }
