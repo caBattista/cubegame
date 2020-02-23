@@ -108,7 +108,7 @@ class Engine {
                 changes.self = this.controls.posRot;
             }
             if (changed) {
-                this.game.ws.request("map", { action: "move", changes: changes });
+                this.game.ws.request("map", { action: "change", changes: changes });
             }
 
             this.renderer.render(this.scene, this.self.elements.camera);

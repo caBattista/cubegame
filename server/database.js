@@ -64,7 +64,7 @@ class Database {
     addMap(map) {
         return new Promise((res, rej) => {
             this.maps.insertOne(map, (dbErr, dbRes) => {
-                dbErr ? rej(dbErr) : res(true)
+                dbErr ? rej(dbErr) : res(dbRes)
             });
         });
     }

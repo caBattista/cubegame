@@ -38,7 +38,7 @@ class Login extends Ui {
                     document.body.innerHTML = "";
                     resolve();
                 }
-            })
+            });
         });
     }
 }

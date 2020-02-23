@@ -1,6 +1,6 @@
 class Game {
 
-    constructor(loader){
+    constructor(loader) {
         this.loader = loader;
     }
 
@@ -15,9 +15,12 @@ class Game {
         this.ui = new Ui(this);
 
         //login
-        await this.loader.load("ui/login/login", 1);
-        await new Login(this).login();
-        this.loader.unload("ui/login/login");
+        // await this.loader.load("ui/login/login", 1);
+        // await new Login(this).login();
+        // await this.loader.unload("ui/login/login");
+
+        //Auto login
+        await this.ws.request("login", { username: '123', password: '123' });
 
         //mainmenu
         await this.loader.load("ui/mainmenu/mainmenu", 1);
@@ -26,7 +29,7 @@ class Game {
         await this.mainmenu.start();
     }
 
-    async joinMap(mapId){
+    async joinMap(mapId) {
         document.body.innerHTML = "";
         //load Three
         await this.loader.load("engine/three");

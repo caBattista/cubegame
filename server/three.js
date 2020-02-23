@@ -50232,6 +50232,9 @@ if (typeof __THREE_DEVTOOLS__ !== 'undefined') {
 
 }
 
+// might be neccessary
+// exports = module.exports;
+
 exports.ACESFilmicToneMapping = ACESFilmicToneMapping;
 exports.AddEquation = AddEquation;
 exports.AddOperation = AddOperation;

@@ -177,51 +177,76 @@ wss.on("disconnect", async (msg, client) => {
   //console.log("removed clientId from db");
 });
 
+const Simulator = require("./server/simulator.js");
+const sim = new Simulator();
+
 // Main Menu
 wss.on("maps", async (msg, client) => {
+
   //verification neccessary!
+
   if (msg.action === "create") {
+
     const dbRes = await db.addMap({ type: msg.type, maxPlayers: 10, players: [] });
-    if (dbRes !== true) { wss.send(client, { message: "error creating map" }); return; }
+    if (dbRes.insertedCount !== 1) { wss.send(client, { message: "error creating map" }); return; }
+    sim.addMap(dbRes.insertedId);
     wss.send(client, { message: "created map successfully" }); return;
+
   } else if (msg.action === "get") {
+
     const dbRes = await db.getMaps();
     if (typeof (dbRes) === "object") { wss.send(client, dbRes); return; }
     else { wss.send(client, { message: "error getting map" }); return; }
+
   } else { wss.send(client, { message: "error with maps" }); return; }
 });
 
 wss.on("settings", async (msg, client) => {
+
   //verification neccessary!
+
   if (msg.action === "get") {
+
     const dbRes = await db.getSettings(client.id);
     if (typeof (dbRes) === "object") { wss.send(client, dbRes); return; }
     else { wss.send(client, { message: "error getting map" }); return; }
+
   } else if (msg.action === "set") {
+
     const dbRes = await db.setSettings(client.id, msg);
     if (dbRes !== true) { wss.send(client, { message: "error changing settings" }); return; }
     wss.send(client, { message: "changed settings successfully" }); return;
+
   }
   else { wss.send(client, { message: "error with settings" }); return; }
 });
 
-const Simulator = require("./server/simulator.js");
-const sim = new Simulator();
-
 //In game
 wss.on("map", async (msg, client) => {
+
   //verification neccessary!
+
   if (msg.action === "join") {
+
     wss.send(client, { access: true });
-    sim.addPlayer(client.id, msg.changes.self);
-  } else if (msg.action === "move") {
-    sim.changePlayer(client.id, msg.changes.self);
-    if (msg.changes.self.position.x > 10) {
-      await wss.closeConnection(client.id);
+    sim.addPlayerToMap(client.id, msg.mapId);
+
+  } else if (msg.action === "change") {
+    if (msg.changes.self) {
+      const res = sim.changePlayer(client.id, msg.changes.self);
+      if (res === true) {
+        await wss.closeConnection(client.id);
+      }
     }
-    console.log("MAP:", msg.changes);
   }
 });
+
+setInterval(() => {
+  const offendersIds = sim.removeOffenders();
+  offendersIds.forEach(offenderId => {
+    wss.closeConnection(offenderId);
+  })
+}, 10000);
 
 // //On Close
 // const exitHandler = () => {
