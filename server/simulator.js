@@ -1,3 +1,4 @@
+const THREE = require("./three.js");
 class Simulator {
 
     constructor() {
@@ -5,7 +6,7 @@ class Simulator {
     }
 
     addMap(mapId) {
-        this.maps[mapId] = { players: {} }
+        this.maps[mapId] = { scene: new THREE.Scene(), players: {} }
     }
 
     addPlayer(clientId, posRot) {

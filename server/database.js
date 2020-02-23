@@ -9,7 +9,7 @@ class Database {
                 this.users = db.db("cubegame").collection("users");
                 this.users.updateMany({}, { $unset: { clientId: 1 } });
                 this.maps = db.db("cubegame").collection("maps");
-                this.maps.remove({})
+                this.maps.deleteMany({})
             }
         })
     }

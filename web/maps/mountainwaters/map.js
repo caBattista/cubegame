@@ -188,7 +188,7 @@ class Map {
         this.elements.mesh = mesh;
     }
 
-    render() {
+    animate() {
         //center rotating cube
         this.elements.mesh.rotation.x += 0.01;
         this.elements.mesh.rotation.y += 0.02;

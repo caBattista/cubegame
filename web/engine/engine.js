@@ -98,16 +98,15 @@ class Engine {
         const renderScene = () => {
             this.stats0.start();
 
-            this.map.render();
+            this.map.animate();
 
             let changed = false;
             let changes = {};
 
-            if (this.controls.render(this.self)) {
+            if (this.controls.animate(this.self)) {
                 changed = true;
                 changes.self = this.controls.posRot;
             }
-
             if (changed) {
                 this.game.ws.request("map", { action: "move", changes: changes });
             }

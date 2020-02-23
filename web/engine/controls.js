@@ -46,7 +46,17 @@ class Controls {
         return keyMap;
     }
 
-    render(self) {
+    checkChange(prevPosRot, curentPosRot) {
+        return prevPosRot.position.x === curentPosRot.position.x &&
+            prevPosRot.position.y === curentPosRot.position.y &&
+            prevPosRot.position.z === curentPosRot.position.z &&
+            prevPosRot.rotation.x === curentPosRot.rotation.x &&
+            prevPosRot.rotation.y === curentPosRot.rotation.y &&
+            prevPosRot.rotation.z === curentPosRot.rotation.z
+            ? false : true;
+    }
+
+    animate(self) {
         let doOrder = { set: [], fion: [], fifo: [] };
         Object.keys(this.pressedKeys).forEach(key => {
             if (this.keyMap[key]) {
@@ -66,16 +76,6 @@ class Controls {
         const changed = this.checkChange(this.posRot, curentPosRot);
         this.posRot = curentPosRot;
         return changed;
-    }
-
-    checkChange(prevPosRot, curentPosRot) {
-        return prevPosRot.position.x === curentPosRot.position.x &&
-            prevPosRot.position.y === curentPosRot.position.y &&
-            prevPosRot.position.z === curentPosRot.position.z &&
-            prevPosRot.rotation.x === curentPosRot.rotation.x &&
-            prevPosRot.rotation.y === curentPosRot.rotation.y &&
-            prevPosRot.rotation.z === curentPosRot.rotation.z
-            ? false : true;
     }
 
 }

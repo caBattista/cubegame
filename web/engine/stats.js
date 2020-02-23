@@ -1,5 +1,5 @@
 class Stats {
-    constructor(rd = 0, udInt = 100) {
+    constructor(rd = 0, udInt = 100, opt = 0) {
         this.rd = rd;
         this.vals = [];
         this.msFr = 0;
@@ -27,6 +27,7 @@ class Stats {
         //Add to Dom
         this.statsCont = document.createElement("div");
         this.statsCont.id = "stats";
+        this.statsCont.style.top = (40 * opt) + "px";
         document.body.appendChild(this.statsCont);
 
         this.textCont = document.createElement("div");
