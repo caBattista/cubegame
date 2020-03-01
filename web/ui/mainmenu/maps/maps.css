@@ -1,10 +1,9 @@
-.stage h1{
-    margin: 10px;
+.stage>.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
-.stage .mapList > div{
-    display: flex;
-    justify-content: space-around;
-    background-color: #f0f0f0;
+.stage>.header>input {
     margin: 10px;
 }

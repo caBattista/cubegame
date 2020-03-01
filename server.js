@@ -30,10 +30,6 @@ const publicFiles = [
 
 app.use('/', async (req, res) => {
 
-  setTimeout(() => {
-
-  }, 1000);
-
   let path = req.originalUrl.split('?')[0];
   path = path === '/' ? '/main/index.html' : path;
 
@@ -172,6 +168,7 @@ wss.on("deleteUser", async (msg, client) => {
 });
 
 wss.on("disconnect", async (msg, client) => {
+  sim.removePlayer(client.id);
   const dbRes = await db.removeUserClientId(client.id);
   if (dbRes !== true) { return; }
   //console.log("removed clientId from db");
@@ -186,19 +183,19 @@ wss.on("maps", async (msg, client) => {
   //verification neccessary!
 
   if (msg.action === "create") {
-
-    const dbRes = await db.addMap({ type: msg.type, maxPlayers: 10, players: [] });
+    const dbRes = await db.addMap({ type: msg.type, maxPlayers: 10 });
     if (dbRes.insertedCount !== 1) { wss.send(client, { message: "error creating map" }); return; }
     sim.addMap(dbRes.insertedId);
     wss.send(client, { message: "created map successfully" }); return;
-
   } else if (msg.action === "get") {
-
     const dbRes = await db.getMaps();
-    if (typeof (dbRes) === "object") { wss.send(client, dbRes); return; }
-    else { wss.send(client, { message: "error getting map" }); return; }
-
-  } else { wss.send(client, { message: "error with maps" }); return; }
+    if (typeof (dbRes) === "object") {
+      dbRes.forEach(map => { map.players = sim.getPlayersIdsOfMap(map._id) });
+      wss.send(client, dbRes);
+      return;
+    }
+  }
+  wss.send(client, { message: "error with maps" }); return;
 });
 
 wss.on("settings", async (msg, client) => {
@@ -227,26 +224,31 @@ wss.on("map", async (msg, client) => {
   //verification neccessary!
 
   if (msg.action === "join") {
-
-    wss.send(client, { access: true });
     sim.addPlayerToMap(client.id, msg.mapId);
-
+    wss.send(client, { access: true });
   } else if (msg.action === "change") {
+
     if (msg.changes.self) {
       const res = sim.changePlayer(client.id, msg.changes.self);
       if (res === true) {
         await wss.closeConnection(client.id);
       }
     }
+
+  } else if (msg.action === "leave") {
+    sim.removePlayer(client.id);
+    wss.send(client, { message: "left map sucessfully" });
   }
 });
 
-setInterval(() => {
-  const offendersIds = sim.removeOffenders();
-  offendersIds.forEach(offenderId => {
-    wss.closeConnection(offenderId);
-  })
-}, 10000);
+// //Anti Cheat System
+// setInterval(() => {
+//   const offenders = sim.removeOffenders();
+//   offenders.forEach(offender => {
+//     wss.send(wss.clients[offender.id], { offences: offender.offences})
+//     wss.closeConnection(offender.id);
+//   })
+// }, 10000);
 
 // //On Close
 // const exitHandler = () => {

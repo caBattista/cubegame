@@ -9,24 +9,27 @@ class Maps extends Mainmenu {
 
     async createPage() {
         this.parent.innerHTML = "";
-        const elements = this.createHTML(`<h1>Select a Playground</h1><div class="mapList"></div>`, this.parent, "all");
-        elements[0].addEventListener("click", async ev => {
-            const res = await this.game.ws.request("maps", { action: "create", type: "mountainwaters" });
+        const elements = this.createHTML(`
+            <div class="header">
+                <h1>Select a Map</h1>
+                <input type="submit" value="Add Map">
+            </div>
+            <div class="list"></div>`, this.parent, "all");
+
+        elements[0].children[1].addEventListener("click", async ev => {
             this.createPage(this.parent);
-        })
-        const res = await this.game.ws.request("maps", { action: "get" })
+        });
+
+        const res = await this.game.getMaps();
         res.forEach(map => {
-            const el = this.createHTML(`<div title="${map._id}">
-                    <div>${this.keyToHR(map.type)}</div>
-                    <div>${map.players.length}/${map.maxPlayers}</div>
-                    <div>Join</div>
-                    </div>`, elements[1]);
+            const el = this.createHTML(`<div>
+                <div title="${map._id}">${this.keyToHR(map.type)}</div>
+                <div>${map.players.length}/${map.maxPlayers}</div>
+                <input type="submit" value="Join">
+                </div>`, elements[1]);
             el.children[2].addEventListener("click", async ev => {
-                const res = await this.game.ws.request("map", { action: "join", mapId: map._id });
-                if (res.access === true) {
-                    this.game.joinMap(map._id);
-                } else { alert("Can't join map"); }
-            })
-        })
+                this.game.joinMap(map._id);
+            });
+        });
     }
 }

@@ -36,6 +36,12 @@ class Simulator {
         console.log("SM: ", JSON.stringify(this.maps, null, 1))
     }
 
+    removePlayer(){
+        this.getPlayers((mapId, playerId) => {
+            delete this.maps[mapId].players[playerId];
+        })
+    }
+
     addOffence(player, OId) {
         player.offences[OId] = player.offences[OId] > 0 ? ++player.offences[OId] : 1;
     }
@@ -48,6 +54,10 @@ class Simulator {
                 callback(mapIds[i], playerIds[j]);
             }
         }
+    }
+
+    getPlayersIdsOfMap(mapId) {
+        return Object.keys(this.maps[mapId].players);
     }
 
     getMapOfPlayer(currentPlayerId) {
@@ -83,8 +93,9 @@ class Simulator {
     removeOffenders() {
         let res = [];
         this.getPlayers((mapId, playerId) => {
-            if (Object.keys(this.maps[mapId].players[playerId].offences).length > 0) {
-                res.push(playerId);
+            const suspect = this.maps[mapId].players[playerId];
+            if (Object.keys(suspect.offences).length > 0) {
+                res.push({ id: playerId, offences: suspect.offences });
                 delete this.maps[mapId].players[playerId];
             }
         })

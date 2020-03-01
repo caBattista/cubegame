@@ -9,21 +9,22 @@
     text-align: center;
 }
 
-.side ul {
+.side>ul {
     list-style: none;
     padding: 0;
     margin: 0;
 }
 
-.side ul li {
+.side>ul>li {
     padding: 10px 20px;
     text-align: left;
 }
 
-.stage {
-    flex: 1;
+.side>ul>li>input {
+    width: 100%;
 }
 
-.active {
-    background-color: green;
+.stage {
+    flex: 1;
+    overflow: auto;
 }

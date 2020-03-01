@@ -15,12 +15,12 @@ class Game {
         this.ui = new Ui(this);
 
         //login
-        // await this.loader.load("ui/login/login", 1);
-        // await new Login(this).login();
-        // await this.loader.unload("ui/login/login");
+        await this.loader.load("ui/login/login", 1);
+        await new Login(this).login();
+        await this.loader.unload("ui/login/login");
 
-        //Auto login
-        await this.ws.request("login", { username: '123', password: '123' });
+        // //Auto login
+        // await this.ws.request("login", { username: '123', password: '123' });
 
         //mainmenu
         await this.loader.load("ui/mainmenu/mainmenu", 1);
@@ -29,9 +29,27 @@ class Game {
         await this.mainmenu.start();
     }
 
+    //Maps
+
+    getMaps() {
+        return new Promise(async (res, rej) => {
+            res(await this.ws.request("maps", { action: "get" }));
+        });
+    }
+
+    createMap() {
+        return new Promise(async (res, rej) => {
+            res(await this.ws.request("maps", { action: "create", type: "mountainwaters" }));
+        });
+    }
+
     async joinMap(mapId) {
+        const res = await this.ws.request("map", { action: "join", mapId: mapId });
+        if (res.access !== true) { alert("Can't join map"); return; }
         document.body.innerHTML = "";
         //load Three
+        await this.loader.load("ui/ingamemenu/ingamemenu", 1);
+        this.ingamemenu = new Ingamemenu(this);
         await this.loader.load("engine/three");
         await this.loader.load("engine/stats");
         await this.loader.load("engine/engine", 1);
@@ -41,5 +59,13 @@ class Game {
         await this.loader.load("maps/mountainwaters/map");
         const settings = await this.ws.request("settings", { action: "get" })
         this.engine = new Engine(this, settings.settings);
+    }
+
+    async leaveMap() {
+        document.body.innerHTML = "";
+        delete this.ingamemenu;
+        delete this.engine;
+        await this.ws.request("map", { action: "leave" });
+        await this.mainmenu.start();
     }
 } 

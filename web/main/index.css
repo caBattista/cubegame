@@ -6,6 +6,10 @@ body {
     background-color: #ddd;
 }
 
+body * {
+    user-select: none;
+}
+
 input {
     border: none;
     border-radius: 3px;
@@ -13,7 +17,11 @@ input {
     padding: 3px;
 }
 
-textarea:focus, input:focus {
+input[type="submit"] {
+    cursor: pointer;
+}
+
+textarea:focus, input:focus, input:hover {
     outline: none;
     box-shadow: inset 0 0 3px rgb(0, 140, 255)
 }
@@ -22,4 +30,49 @@ input[type=submit] {
     box-shadow: 0 0 3px #aaa;
     background-color: #fff;
     padding: 3px;
+}
+
+h1 {
+    margin: 10px;
+}
+
+h2 {
+    margin: 10px;
+}
+
+h3 {
+    margin: 10px;
+}
+
+.list {
+    border-radius: 3px;
+    background-color: #eee;
+    margin: 10px;
+    overflow: hidden;
+}
+
+.list>div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px;
+    transition: 0.2s;
+}
+
+.list>div:hover {
+    background-color: rgb(133, 212, 166);
+}
+
+.list>div+div {
+    border-top: 1px solid #ddd;
+}
+
+.list>div>input {
+    border: none;
+    border-radius: 3px;
+    text-align: center;
+}
+
+.selected {
+    background-color: rgb(51, 153, 93) !important;
 }

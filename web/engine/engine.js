@@ -1,6 +1,7 @@
 class Engine {
     constructor(game, settings) {
         this.game = game;
+
         this.addCid = url => { return url + "?clientId=" + this.game.loader.clientId; };
 
         // ############# settings #############

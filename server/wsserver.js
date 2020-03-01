@@ -32,10 +32,6 @@ class WSServer {
     });
   }
 
-  listClients() {
-    return Object.keys(this.clients);
-  }
-
   on(rqType, handler) {
     this.handlers[rqType] = [{ handler: handler, active: true }];
   }

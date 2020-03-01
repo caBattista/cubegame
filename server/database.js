@@ -1,8 +1,8 @@
 class Database {
     constructor(creds) {
         this.creds = creds;
-        this.client = require('mongodb').MongoClient;
-        this.client.connect(this.creds.url, (err, db) => {
+        this.mongodb = require('mongodb');
+        this.mongodb.MongoClient.connect(this.creds.url, (err, db) => {
             if (err) throw err;
             else {
                 this.db = db;
@@ -76,6 +76,15 @@ class Database {
             });
         });
     }
+
+    //not needed anymore
+    // addPlayerToMap(clientId, mapId) {
+    //     return new Promise((res, rej) => {
+    //         this.maps.updateOne({ _id: new this.mongodb.ObjectId(mapId) }, { $push: { players: clientId } }, (dbErr, dbRes) => {
+    //             dbErr ? rej(dbErr) : res(true)
+    //         });
+    //     });
+    // }
 
     setSettings(clientId, settings) {
         return new Promise((res, rej) => {

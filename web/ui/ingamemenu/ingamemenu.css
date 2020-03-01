@@ -1,0 +1,6 @@
+.ingamemenu{
+    position: fixed;
+    cursor: pointer;
+    z-index: 1;
+    background-color: #fff;
+}
