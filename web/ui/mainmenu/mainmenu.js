@@ -10,7 +10,8 @@ class Mainmenu extends Ui {
             this.state = { selectedPage: "" };
             const lels = this.createLayout(document.body);
             this.stage = lels[1];
-            this.createMenu(lels);
+            this.createMenuPage(lels[0]);
+            this.loadPage("Lobby");
         });
     }
 
@@ -24,31 +25,33 @@ class Mainmenu extends Ui {
         return elements;
     }
 
-    createMenu(parents) {
+    createMenuPage(parent) {
+
         const ul = this.createHTML(`
             <h1>Menu</h1>
             <ul>
                 <li><input type="submit" value="Lobby" class="selected"></li>
-                <li><input type="submit" value="Character"></li>
+                <li><input type="submit" value="Characters"></li>
                 <li><input type="submit" value="Settings"></li>
                 <li><input type="submit" value="Logout"></li>
             </ul>
-            `, parents[0], 1);
-        this.loadPage("Lobby");
+        `, parent, 1);
+
         ul.addEventListener("click", ev => {
-            if (ev.target.tagName !== "INPUT") { return; }
-            const input = ev.target;
-            if (input.value === "Logout") {
-                this.game.ws.close();
-                location.reload();
-            } else if (this.state.selectedPage !== input.value) {
-                Array.from(ul.getElementsByTagName("input")).forEach(input => {
-                    input.classList.remove("selected");
-                });
-                input.classList.add("selected");
-                this.stage.innerHTML = "";
-                this.state.selectedPage = input.value;
-                this.loadPage(input.value);
+            if (ev.target.tagName === "INPUT") {
+                const inputClicked = ev.target;
+                if (inputClicked.value === "Logout") {
+                    this.game.ws.close();
+                    location.reload();
+                } else /*if (this.state.selectedPage !== inputClicked.value)*/ {
+                    this.state.selectedPage = inputClicked.value;
+                    Array.from(ul.getElementsByTagName("input")).forEach(input => {
+                        input.classList.remove("selected");
+                    });
+                    inputClicked.classList.add("selected");
+                    this.stage.innerHTML = "";
+                    this.loadPage(inputClicked.value);
+                }
             }
         })
     }
@@ -57,13 +60,15 @@ class Mainmenu extends Ui {
         switch (pageName) {
             case "Lobby":
                 await this.game.loader.load("ui/mainmenu/maps/maps", 1);
-                this.maps = new Maps(this.game, this.stage);
+                new Maps(this.game, this.stage);
                 break;
-            case "Character":
+            case "Characters":
+                await this.game.loader.load("ui/mainmenu/characters/characters")
+                new Characters(this.game, this.stage);
                 break;
             case "Settings":
                 await this.game.loader.load("ui/mainmenu/settings/settings", 1);
-                this.settings = new Settings(this.game, this.stage);
+                new Settings(this.game, this.stage);
                 break;
         }
     }

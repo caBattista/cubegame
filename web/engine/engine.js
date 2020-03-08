@@ -1,5 +1,5 @@
 class Engine {
-    constructor(game, settings) {
+    constructor(game, settings, characters) {
         this.game = game;
 
         this.addCid = url => { return url + "?clientId=" + this.game.loader.clientId; };
@@ -10,6 +10,10 @@ class Engine {
         this.settings.useWireframe = false;
         this.settings.player = { height: 0.5, speed: 0.5, turnSpeed: Math.PI * 0.005, gravity: 0.3 };
         this.settings.bullet = { height: 0.4, speed: 2, end: 500, gravity: 0 };
+
+        // ############# characters #############
+
+        this.characters = characters;
 
         this.audio = {
             ugh: new Audio(this.addCid('maps/mountainwaters/audio/ugh.mp3')),
@@ -104,6 +108,17 @@ class Engine {
             let changed = false;
             let changes = {};
 
+            //gravity
+            if (Math.abs(this.self.elements.yaw.position.x) > 125 || Math.abs(this.self.elements.yaw.position.z) > 125) {
+                this.self.elements.yaw.position.y -= this.settings.player.gravity;
+            }
+            else if (this.self.elements.yaw.position.y < this.settings.player.height) {
+                this.self.elements.yaw.position.y = this.settings.player.height;
+            }
+            else if (this.self.elements.yaw.position.y > this.settings.player.height) {
+                this.self.elements.yaw.position.y -= this.settings.player.gravity;
+            }
+
             if (this.controls.animate(this.self)) {
                 changed = true;
                 changes.self = this.controls.posRot;
@@ -124,7 +139,6 @@ class Engine {
     }
 
 }
-
 
 /*
 

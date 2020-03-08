@@ -5,7 +5,7 @@ class Ui {
     }
 
     createHTML(htmlString, parent, siblings = 0) {
-        var div = document.createElement('div');
+        const div = document.createElement('div');
         div.innerHTML = htmlString.replace(/(\r\n|\n|\r)/gm, "").replace(/  +/g, ' ').trim();
         const children = Array.from(div.children);
         if (parent) {
@@ -16,8 +16,24 @@ class Ui {
         return siblings === "all" ? children : children[siblings];
     }
 
+    createToolTip(htmlString) {
+        const tt = this.createHTML(`
+        <div class="tooltipModalOverlay">
+            <div class="tooltipModal">
+                <div class="tooltipClose">X</div>
+                <div class="tooltipScroll">
+                    <div class="tooltipContent"></div>
+                </div>
+            </div>
+        </div>`, document.body);
+        tt.children[0].children[0].addEventListener("click", () => tt.remove());
+        const content =
+            this.createHTML(htmlString, tt.children[0].children[1].children[0], "all");
+        return { tt: tt, content: content };
+    }
+
     formToJSON(parent) {
-        let res = {};
+        const res = {};
         parent.querySelectorAll('[name]').forEach(el => {
             res[el.name] = el.value;
         })

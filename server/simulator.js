@@ -9,6 +9,9 @@ class Simulator {
     offences = {
         "tmcps": "too many changes per second",
         "pmtf": "player movement to fast",
+        "pgna": "player gravity not active",
+        "pomb": "player outside map bounds",
+        "pim": "player inside Mesh"
     }
 
     addMap(mapId) {
@@ -19,24 +22,7 @@ class Simulator {
         this.maps[mapId].players[playerId] = { offences: {} };
     }
 
-    changePlayer(playerId, posRot) {
-        const mapId = this.getMapOfPlayer(playerId);
-        if (!mapId) { return; }
-        const player = this.maps[mapId].players[playerId];
-
-        if (player.posRot && player.posRot.position) {
-            const distance =
-                new THREE.Vector3(posRot.position.x, posRot.position.y, posRot.position.z).distanceTo(
-                    new THREE.Vector3(player.posRot.position.x, player.posRot.position.y, player.posRot.position.z));
-            if (distance > 0.6) { this.addOffence(player, "pmtf"); }
-        }
-
-        this.maps[mapId].players[playerId].changeCount++;
-        this.maps[mapId].players[playerId].posRot = posRot;
-        console.log("SM: ", JSON.stringify(this.maps, null, 1))
-    }
-
-    removePlayer(){
+    removePlayer() {
         this.getPlayers((mapId, playerId) => {
             delete this.maps[mapId].players[playerId];
         })
@@ -66,6 +52,54 @@ class Simulator {
             if (currentPlayerId === playerId) { res = mapId; }
         })
         return res;
+    }
+
+    changePlayer(playerId, posRot) {
+        const mapId = this.getMapOfPlayer(playerId);
+        if (!mapId) { return; }
+        const player = this.maps[mapId].players[playerId];
+
+        if (player.posRot && player.posRot.position) {
+
+            //active abilities of player and other players need to be checked first
+
+            //checks if player is moving to fast
+            const distance =
+                new THREE.Vector3(posRot.position.x, posRot.position.y, posRot.position.z).distanceTo(
+                    new THREE.Vector3(player.posRot.position.x, player.posRot.position.y, player.posRot.position.z));
+            if (distance > 0.6) { this.addOffence(player, "pmtf"); }
+
+            //check if player gravity is active
+            //needs check if player is jumping or not
+            if (posRot.position.y > 0.5 /*player height*/ && distance < 0.6) {
+                this.addOffence(player, "pgna");
+            }
+
+            //check if player is outside map bounds
+            if (posRot.position.x < -250 || posRot.position.x > 250 ||
+                posRot.position.y < -250 || posRot.position.y > 250 ||
+                posRot.position.z < -250 || posRot.position.z > 250
+            ) { this.addOffence(player, "pomb"); }
+
+            //check if players inside other prohibited Mesh (example: bullt floor etc.)
+            //could also do the hit detection
+            /*
+            getProhibitedMeshesOfMap(mapId).forEach(mesh => {
+                const point = new THREE.Vector3(posRot.position.x, posRot.position.y, posRot.position.z) // Your point
+                const geometry = new THREE.BoxBufferGeometry(mesh.x, mesh.y, mesh.z)
+                const mesh = new THREE.Mesh(geometry)
+                const raycaster = new THREE.Raycaster()
+                raycaster.set(point, new THREE.Vector3(1, 1, 1))
+                if (raycaster.intersectObject(mesh).length % 2 === 1) { // Point is in objet
+                    this.addOffence(player, "pim");
+                }
+            })
+            */
+        }
+
+        this.maps[mapId].players[playerId].changeCount++;
+        this.maps[mapId].players[playerId].posRot = posRot;
+        console.log("SM: ", JSON.stringify(this.maps, null, 1))
     }
 
     //checks if players are running higher fps in game

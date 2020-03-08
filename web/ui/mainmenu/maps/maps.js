@@ -17,6 +17,7 @@ class Maps extends Mainmenu {
             <div class="list"></div>`, this.parent, "all");
 
         elements[0].children[1].addEventListener("click", async ev => {
+            await this.game.createMap();
             this.createPage(this.parent);
         });
 

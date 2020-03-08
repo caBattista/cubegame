@@ -18,12 +18,12 @@ const sfo = { root: __dirname + '/web/' }
 
 const publicFiles = [
   '/main/index.html',
-  '/main/index.css',
   '/main/favicon.png',
   '/util/loader.js',
   '/game/game.js',
   '/util/ws.js',
   '/ui/ui.js',
+  '/ui/ui.css',
   '/ui/login/login.js',
   '/ui/login/login.css'
 ]
@@ -66,13 +66,6 @@ const crypto = require('crypto');
 const argon2 = require('argon2');
 const pepper = "|>3|>|>3|2";
 
-// var os = require('os');
-// setInterval(() => {
-//   //console.log("WS: ", wss.listClients());
-//   //console.log(os.cpus());
-//   console.log("free mem ",Math.round(os.freemem() / 1024 / 1024 / 1024 * 10) / 10);
-// }, 100);
-
 //Request handeling
 wss.on("login", async (msg, client) => {
 
@@ -81,29 +74,24 @@ wss.on("login", async (msg, client) => {
     username: Joi.string().alphanum().min(3).max(30),
     password: Joi.string().alphanum().min(3).max(30),
   }), { presence: "required", stripUnknown: true });
-  if (valRes.error !== null) { wss.send(client, { access: false }); return; }
-  //console.log("checked message");
+  if (valRes.error !== null) { wss.send(client, { err: { msg: "Validation failed" } }); return; }
 
   //Check db for user
   const dbRes = await db.getUser({ username: msg.username });
-  if (dbRes.length !== 1) { wss.send(client, { access: false }); return; }
-  //console.log("checked db for user",dbRes );
+  if (dbRes.length !== 1) { wss.send(client, { err: { msg: "User not found" } }); return; }
 
   //Check password
   const pswRes = await argon2.verify(dbRes[0].password, dbRes[0].salt + msg.password + pepper)
-  if (pswRes !== true) { wss.send(client, { access: false }); return; }
-  //console.log("checked password");
+  if (pswRes !== true) { wss.send(client, { err: { msg: "Password verification failed" } }); return; }
 
   //close connection if same client is logged in
   await wss.closeConnection(dbRes[0].clientId);
-  //console.log("removed ther client", dbRes[0].clientId);
 
   //Add clientId to db
   const dbRes2 = await db.addUserClientId({ username: msg.username }, client.id);
-  if (dbRes2 !== true) { wss.send(client, { access: false }); return; }
-  //console.log("added clientId to db");
+  if (dbRes2 !== true) { wss.send(client, { err: { msg: "Could not add clientId to user" } }); return; }
 
-  wss.send(client, { access: true });
+  wss.send(client, { succ: { msg: "Loged in successfully" } });
 });
 
 wss.on("register", async (msg, client) => {
@@ -113,57 +101,58 @@ wss.on("register", async (msg, client) => {
     username: Joi.string().alphanum().min(3).max(30),
     password: Joi.string().alphanum().min(3).max(30),
   }), { presence: "required", stripUnknown: true });
-  if (valRes.error !== null) { wss.send(client, { access: false }); return; }
-  //console.log("checked message");
+  if (valRes.error !== null) { wss.send(client, { err: { msg: "Validation failed" } }); return; }
 
-  //Check db for user (prevent two users with same username)
+  //Check DB for user (prevent two users with same username)
   const dbRes = await db.getUser({ username: msg.username });
-  if (dbRes.length !== 0) { wss.send(client, { access: false }); return; }
-  //console.log("checked db for user");
+  if (dbRes.length !== 0) { wss.send(client, { err: { msg: "User alredy exists" } }); return; }
 
-  //Create salt, password, client id
-  msg.salt = crypto.randomBytes(16).toString('hex');
-  msg.password = await argon2.hash(msg.salt + msg.password + pepper);
-  msg.clientId = client.id;
-  //console.log("created salt, password, client id");
+  //Create default User
+  const user = {
+    username: msg.username,
+    password: msg.password,
+    salt: crypto.randomBytes(16).toString('hex'),
+    clientId: client.id,
+    settings: {
+      gameplay: {
 
-  //create default settings
-  msg.settings = {
-    gameplay: {
-
+      },
+      sound: {
+        globalVolume: 100
+      },
+      controls: {
+        moveForward: "KeyW",
+        moveBackward: "KeyS",
+        moveLeft: "KeyA",
+        moveRight: "KeyD",
+        jump: "Space",
+        sprint: "ShiftLeft",
+        crouch: "AltLeft",
+        interact: "KeyE",
+        melee: "KeyF",
+        granade: "KeyG"
+      },
+      graphics: {
+        quality: "High"
+      }
     },
-    sound: {
-      globalVolume: 100
-    },
-    controls: {
-      moveForward: "KeyW",
-      moveBackward: "KeyS",
-      moveLeft: "KeyA",
-      moveRight: "KeyD",
-      jump: "Space",
-      sprint: "ShiftLeft",
-      crouch: "AltLeft",
-      interact: "KeyE",
-      melee: "KeyF",
-      granade: "KeyG"
-    },
-    graphics: {
-      quality: "High"
+    characters: {
+      John: {}
     }
   }
+  user.password = await argon2.hash(user.salt + user.password + pepper);
 
   //Add user to db
-  const dbRes2 = await db.addUser(msg);
-  if (dbRes2 !== true) { wss.send(client, { access: false }); return; }
-  //console.log("added user to db");
+  const dbRes2 = await db.addUser(user);
+  if (dbRes2 !== true) { wss.send(client, { err: { msg: "Could not add user" } }); return; }
 
-  wss.send(client, { access: true });
+  wss.send(client, { succ: { msg: "Registered user successfully" } });
 });
 
 wss.on("deleteUser", async (msg, client) => {
   const dbRes = await db.deleteUser(client.id);
-  if (dbRes !== true) { return; }
-  wss.send(client, { message: "deleted User from db" });
+  if (dbRes !== true) { wss.send(client, { err: { msg: "Could not delete user" } }); return; }
+  wss.send(client, { message: "deleted user" });
   //console.log("deleted User from db");
 });
 
@@ -178,13 +167,14 @@ const Simulator = require("./server/simulator.js");
 const sim = new Simulator();
 
 // Main Menu
+
 wss.on("maps", async (msg, client) => {
 
   //verification neccessary!
 
   if (msg.action === "create") {
     const dbRes = await db.addMap({ type: msg.type, maxPlayers: 10 });
-    if (dbRes.insertedCount !== 1) { wss.send(client, { message: "error creating map" }); return; }
+    if (dbRes.insertedCount !== 1) { wss.send(client, { err: { msg: "error creating map" } }); return; }
     sim.addMap(dbRes.insertedId);
     wss.send(client, { message: "created map successfully" }); return;
   } else if (msg.action === "get") {
@@ -195,7 +185,25 @@ wss.on("maps", async (msg, client) => {
       return;
     }
   }
-  wss.send(client, { message: "error with maps" }); return;
+  wss.send(client, { err: { msg: "error with maps" } }); return;
+});
+
+wss.on("characters", async (msg, client) => {
+
+  //verification neccessary!
+
+  if (msg.action === "create") {
+    const dbRes = await db.addCharacter(client.id, msg.name);
+    if (dbRes.insertedCount !== 1) { wss.send(client, { err: { msg: "error creating character" } }); return; }
+    wss.send(client, { succ: { msg: "created character successfully" } }); return;
+  } else if (msg.action === "get") {
+    const dbRes = await db.getCharacters(client.id);
+    if (typeof (dbRes) === "object") {
+      wss.send(client, dbRes);
+      return;
+    }
+  }
+  wss.send(client, { merr: { msg: "error with maps" } }); return;
 });
 
 wss.on("settings", async (msg, client) => {
@@ -206,16 +214,16 @@ wss.on("settings", async (msg, client) => {
 
     const dbRes = await db.getSettings(client.id);
     if (typeof (dbRes) === "object") { wss.send(client, dbRes); return; }
-    else { wss.send(client, { message: "error getting map" }); return; }
+    else { wss.send(client, { err: { msg: "error getting map" } }); return; }
 
   } else if (msg.action === "set") {
 
     const dbRes = await db.setSettings(client.id, msg);
-    if (dbRes !== true) { wss.send(client, { message: "error changing settings" }); return; }
+    if (dbRes !== true) { wss.send(client, { err: { msg: "error changing settings" } }); return; }
     wss.send(client, { message: "changed settings successfully" }); return;
 
   }
-  else { wss.send(client, { message: "error with settings" }); return; }
+  else { wss.send(client, { err: { msg: "error with settings" } }); return; }
 });
 
 //In game

@@ -21,10 +21,10 @@ class Login extends Ui {
             `, document.body, 1);
             const handleSubmit = async ev => {
                 const res = await this.game.ws.request("login", this.formToJSON(el));
-                if (res.access === true) {
+                if (res.succ) {
                     document.body.innerHTML = "";
                     resolve();
-                }
+                } else { alert(res.err.msg); }
             }
             el.addEventListener("keyup", ev => {
                 if (ev.keyCode !== 13) { return; }
@@ -34,10 +34,10 @@ class Login extends Ui {
             el.children[5].addEventListener("click", handleSubmit)
             el.children[6].addEventListener("click", async ev => {
                 const res = await this.game.ws.request("register", this.formToJSON(el));
-                if (res.access === true) {
+                if (res.succ) {
                     document.body.innerHTML = "";
                     resolve();
-                }
+                } else { alert(res.err.msg); }
             });
         });
     }

@@ -1,8 +1,7 @@
 class Database {
     constructor(creds) {
-        this.creds = creds;
         this.mongodb = require('mongodb');
-        this.mongodb.MongoClient.connect(this.creds.url, (err, db) => {
+        this.mongodb.MongoClient.connect(creds.url, (err, db) => {
             if (err) throw err;
             else {
                 this.db = db;
@@ -16,89 +15,107 @@ class Database {
 
     close() { this.db.close(); }
 
-    //User
-
-    addUser(user) {
-        return new Promise((res, rej) => {
-            this.users.insertOne(user, (dbErr, dbRes) => {
-                dbErr ? rej(dbErr) : res(true)
-            });
-        });
+    handleError(err) {
+        console.log("DB:", err);
+        return err;
     }
 
-    getUser(user) {
-        return new Promise((res, rej) => {
-            this.users.find(user).toArray((dbErr, dbRes) => {
-                dbErr ? rej(dbErr) : res(dbRes)
-            });
-        });
-    }
-
-    deleteUser(clientId) {
-        return new Promise((res, rej) => {
-            this.users.deleteMany({ clientId: clientId }, (dbErr, dbRes) => {
-                dbErr ? rej(dbErr) : res(true)
-            });
-        });
-    }
-
-    //ClientId
+    // ######################### ClientId #########################
 
     addUserClientId(user, clientId) {
         return new Promise((res, rej) => {
-            this.users.updateOne(user, { $set: { clientId: clientId } }, (dbErr, dbRes) => {
-                dbErr ? rej(dbErr) : res(true)
+            this.users.updateOne(user, { $set: { clientId: clientId } }, (err, data) => {
+                err ? rej(this.handleError(err)) : res(true);
             });
         });
     }
 
     removeUserClientId(clientId) {
         return new Promise((res, rej) => {
-            this.users.updateOne({ clientId: clientId }, { $unset: { clientId: 1 } }, (dbErr, dbRes) => {
-                dbErr ? rej(dbErr) : res(true)
+            this.users.updateOne({ clientId: clientId }, { $unset: { clientId: 1 } }, (err, data) => {
+                err ? rej(this.handleError(err)) : res(true)
             });
         });
     }
 
-    //Maps
+    // ######################### User #########################
+
+    addUser(user) {
+        return new Promise((res, rej) => {
+            this.users.insertOne(user, (err, data) => {
+                err ? rej(this.handleError(err)) : res(true)
+            });
+        });
+    }
+
+    async getUser(user) {
+        return new Promise((res, rej) => {
+            this.users.find(user).toArray((err, data) => {
+                err ? rej(this.handleError(err)) : res(data)
+            });
+        });
+    }
+
+    deleteUser(clientId) {
+        return new Promise((res, rej) => {
+            this.users.deleteMany({ clientId: clientId }, (err, data) => {
+                err ? rej(this.handleError(err)) : res(true)
+            });
+        });
+    }
+
+    // ######################### Maps #########################
+
     addMap(map) {
         return new Promise((res, rej) => {
-            this.maps.insertOne(map, (dbErr, dbRes) => {
-                dbErr ? rej(dbErr) : res(dbRes)
+            this.maps.insertOne(map, (err, data) => {
+                err ? rej(this.handleError(err)) : res(data)
             });
         });
     }
 
     getMaps() {
         return new Promise((res, rej) => {
-            this.maps.find({}).toArray((dbErr, dbRes) => {
-                dbErr ? rej(dbErr) : res(dbRes)
+            this.maps.find({}).toArray((err, data) => {
+                err ? rej(this.handleError(err)) : res(data)
             });
         });
     }
 
-    //not needed anymore
-    // addPlayerToMap(clientId, mapId) {
-    //     return new Promise((res, rej) => {
-    //         this.maps.updateOne({ _id: new this.mongodb.ObjectId(mapId) }, { $push: { players: clientId } }, (dbErr, dbRes) => {
-    //             dbErr ? rej(dbErr) : res(true)
-    //         });
-    //     });
-    // }
+    //######################### Characters #########################
+
+    addCharacter(clientId, charId) {
+        return new Promise((res, rej) => {
+            this.users.updateOne({ clientId: clientId },
+                { $set: { [`characters.${charId}`]: "" } }, (err, data) => {
+                    err ? rej(this.handleError(err)) : res(true)
+                });
+        });
+    }
+
+    getCharacters(clientId) {
+        return new Promise((res, rej) => {
+            this.users.findOne({ clientId: clientId }, { fields: { _id: 0, characters: 1 } }, (err, data) => {
+                err ? rej(this.handleError(err)) : res(data)
+            });
+        });
+    }
+
+    // ######################### Settings #########################
 
     setSettings(clientId, settings) {
         return new Promise((res, rej) => {
             this.users.updateOne({ clientId: clientId },
-                { $set: { [`settings.${settings.category}.${settings.name}`]: settings.value } }, (dbErr, dbRes) => {
-                    dbErr ? rej(dbErr) : res(true)
+                { $set: { [`settings.${settings.category}.${settings.name}`]: settings.value } }, (err, data) => {
+                    err ? rej(this.handleError(err)) : res(true)
                 });
         });
     }
 
     getSettings(clientId) {
         return new Promise((res, rej) => {
-            this.users.findOne({ clientId: clientId }, { fields: { _id: 0, settings: 1 } }, (dbErr, dbRes) => {
-                dbErr ? rej(dbErr) : res(dbRes)
+            this.users.findOne({ clientId: clientId }, { fields: { _id: 0, settings: 1 } }, (err, data) => {
+                err ? rej(this.handleError(err)) : res(data)
             });
         });
     }
