@@ -33,7 +33,7 @@ class Loader {
             else {
                 if (option === 0 || option === 1) {
                     let htmlEl = document.createElement("script");
-                    htmlEl.src = pathWOE + '.js' + (this.clientId ? `?clientId=${this.clientId}` : '');
+                    htmlEl.src = pathWOE + '.js' + (this.client_id ? `?client_id=${this.client_id}` : '');
                     htmlEl.addEventListener("load", () => {
                         this.loadedFiles[pathWOE + '.js'] = { pathWOE: pathWOE, ext: 'js', htmlEl: htmlEl };
                         if (option === 0 || this.loadedFiles[pathWOE + '.css']) { resolve(0); }
@@ -42,7 +42,7 @@ class Loader {
                 }
                 if (option === 1) {
                     let htmlEl = document.createElement("link");
-                    htmlEl.href = pathWOE + '.css' + (this.clientId ? `?clientId=${this.clientId}` : '');
+                    htmlEl.href = pathWOE + '.css' + (this.client_id ? `?client_id=${this.client_id}` : '');
                     htmlEl.rel = "stylesheet";
                     htmlEl.addEventListener("load", () => {
                         this.loadedFiles[pathWOE + '.css'] = { pathWOE: pathWOE, ext: 'js', htmlEl: htmlEl };
@@ -73,7 +73,7 @@ class Loader {
         });
     }
 
-    addClientId(clientId) {
-        this.clientId = clientId;
+    addClientId(client_id) {
+        this.client_id = client_id;
     };
 }

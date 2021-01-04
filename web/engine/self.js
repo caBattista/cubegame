@@ -4,6 +4,9 @@ class Self {
         this.settings = settings;
     }
 
+    changespeeed(s) { this.settings.speed = s; }
+
+
     elements = {}
 
     addElementsToscene(scene) {
@@ -12,7 +15,7 @@ class Self {
             new THREE.BoxGeometry(1, 1, 1),
             new THREE.MeshPhongMaterial({ color: 0xff4444, wireframe: this.settings.useWireframe })
         );
-        yaw.position.set(0, this.settings.player.height, 0);
+        yaw.position.set(0, this.settings.height, 0);
         scene.add(yaw);
 
         const pitch = new THREE.Mesh(
@@ -34,11 +37,24 @@ class Self {
         this.elements.camera = camera;
     }
 
+    addElementsToPhysics(pysics) {
+        pysics.addMeshToGravity(this.elements.yaw);
+        // if (Math.abs(this.self.elements.yaw.position.x) > 125 || Math.abs(this.self.elements.yaw.position.z) > 125) {
+        //     this.self.elements.yaw.position.y -= this.settings.gravity;
+        // }
+        // else if (this.self.elements.yaw.position.y < this.settings.height) {
+        //     this.self.elements.yaw.position.y = this.settings.height;
+        // }
+        // else if (this.self.elements.yaw.position.y > this.settings.height) {
+        //     this.self.elements.yaw.position.y -= this.settings.gravity;
+        // }
+    }
+
     moveDegRad(degRad) {
         this.elements.yaw.position.add(
             this.elements.camera.getWorldDirection(new THREE.Vector3())
                 .applyAxisAngle(new THREE.Vector3(0, 1, 0), degRad)
-                .multiply(new THREE.Vector3(this.settings.player.speed, 0, this.settings.player.speed))
+                .multiply(new THREE.Vector3(this.settings.speed, 0, this.settings.speed))
         );
     }
 
@@ -48,12 +64,12 @@ class Self {
             case "moveBackward": this.moveDegRad(Math.PI); break;
             case "moveLeft": this.moveDegRad(Math.PI / 2); break;
             case "moveRight": this.moveDegRad(-Math.PI / 2); break;
-            case "jump": this.elements.yaw.position.y += this.settings.player.speed; break;
+            case "jump": this.elements.yaw.position.y += this.settings.speed; break;
             case "sprint":
-                this.settings.player.speed = 2;
+                this.settings.speed = 2;
                 break;
             case "setDefaults":
-                this.settings.player.speed = 0.4;
+                this.settings.speed = 0.4;
                 break;
         }
     }

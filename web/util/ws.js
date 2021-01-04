@@ -7,8 +7,8 @@ class Ws {
             this.ws.onopen = () => {
                 this.ws.onmessage = e => {
                     const data = JSON.parse(e.data);
-                    console.log("WS: ", data.clientId);
-                    res(data.clientId);
+                    console.log("WS: ", data.client_id);
+                    res(data.client_id);
                 };
                 this.ws.onclose = e => {
                     document.body.innerHTML = "It seems a though your connection was closed.\n" +

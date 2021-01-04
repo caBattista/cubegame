@@ -25,7 +25,7 @@ class Maps extends Mainmenu {
         res.forEach(map => {
             const el = this.createHTML(`<div>
                 <div title="${map._id}">${this.keyToHR(map.type)}</div>
-                <div>${map.players.length}/${map.maxPlayers}</div>
+                <div>${map.players.length}/${map.max_players}</div>
                 <input type="submit" value="Join">
                 </div>`, elements[1]);
             el.children[2].addEventListener("click", async ev => {

@@ -1,7 +1,15 @@
+//Load config file
+const fs = require('fs');
+const config = JSON.parse(fs.readFileSync('config.json'));
+
+//Database start
+const Database = require("./server/database.js");
+const db = new Database(config.database_settings);
+
 //Server start
 const express = require('express');
 const app = express();
-const port = process.env.PORT || 1337;
+const port = process.env.PORT || config.express_settings.port;
 
 const server = app.listen(port, () => {
   require('dns').lookup(require('os').hostname(), (err, add, fam) => {
@@ -9,45 +17,29 @@ const server = app.listen(port, () => {
   });
 });
 
-//Database start
-const Database = require("./server/database.js");
-const db = new Database({ url: "mongodb://localhost:27017/cubegame" });
-
 //Host files
-const sfo = { root: __dirname + '/web/' }
-
-const publicFiles = [
-  '/main/index.html',
-  '/main/favicon.png',
-  '/util/loader.js',
-  '/game/game.js',
-  '/util/ws.js',
-  '/ui/ui.js',
-  '/ui/ui.css',
-  '/ui/login/login.js',
-  '/ui/login/login.css'
-]
-
 app.use('/', async (req, res) => {
 
   let path = req.originalUrl.split('?')[0];
   path = path === '/' ? '/main/index.html' : path;
 
-  console.log("EX: requested file ", req.query.clientId, " ", path);
+  console.log("EX: requested file ", req.query.client_id, " ", path);
 
-  if (publicFiles.includes(path)) { res.sendFile(path, sfo); }
-  else if (req.query.clientId) {
+  if (config.file_settings.public_files.includes(path)) {
+    res.sendFile(path, { root: __dirname + config.file_settings.root_dir });
+  }
+  else if (req.query.client_id) {
     //Check message
-    const valRes = Joi.validate(req.query.clientId, Joi.string().alphanum().required());
+    const valRes = Joi.validate(req.query.client_id, Joi.string().alphanum().required());
     if (valRes.error !== null) { res.status(403).send('Invalid Message'); return; }
 
     //Check if WSServer knows Client
-    if (!wss.clients[req.query.clientId]) { res.status(403).send('Sorry! You cant see that.'); return; }
+    if (!wss.clients[req.query.client_id]) { res.status(403).send('Sorry! You cant see that.'); return; }
 
     //Check if DB knows Client
-    const dbRes = await db.getUser({ clientId: req.query.clientId });
+    const dbRes = await db.getUser({ client_id: req.query.client_id });
     if (dbRes.length !== 1) { res.status(403).send('Sorry! You cant see that.'); return; }
-    res.sendFile(path, sfo);
+    res.sendFile(path, { root: __dirname + config.file_settings.root_dir });
   }
   else { res.status(404).send('404'); }
 });
@@ -85,11 +77,11 @@ wss.on("login", async (msg, client) => {
   if (pswRes !== true) { wss.send(client, { err: { msg: "Password verification failed" } }); return; }
 
   //close connection if same client is logged in
-  await wss.closeConnection(dbRes[0].clientId);
+  await wss.closeConnection(dbRes[0].client_id);
 
-  //Add clientId to db
-  const dbRes2 = await db.addUserClientId({ username: msg.username }, client.id);
-  if (dbRes2 !== true) { wss.send(client, { err: { msg: "Could not add clientId to user" } }); return; }
+  //Add client_id to db
+  const dbRes2 = await db.addUserClientId(dbRes[0].id, client.id);
+  if (dbRes2 !== true) { wss.send(client, { err: { msg: "Could not add client_id to user" } }); return; }
 
   wss.send(client, { succ: { msg: "Loged in successfully" } });
 });
@@ -112,39 +104,24 @@ wss.on("register", async (msg, client) => {
     username: msg.username,
     password: msg.password,
     salt: crypto.randomBytes(16).toString('hex'),
-    clientId: client.id,
-    settings: {
-      gameplay: {
-
-      },
-      sound: {
-        globalVolume: 100
-      },
-      controls: {
-        moveForward: "KeyW",
-        moveBackward: "KeyS",
-        moveLeft: "KeyA",
-        moveRight: "KeyD",
-        jump: "Space",
-        sprint: "ShiftLeft",
-        crouch: "AltLeft",
-        interact: "KeyE",
-        melee: "KeyF",
-        granade: "KeyG"
-      },
-      graphics: {
-        quality: "High"
-      }
-    },
+    client_id: client.id,
     characters: {
       John: {}
     }
   }
   user.password = await argon2.hash(user.salt + user.password + pepper);
 
-  //Add user to db
+  // Add user to db
   const dbRes2 = await db.addUser(user);
   if (dbRes2 !== true) { wss.send(client, { err: { msg: "Could not add user" } }); return; }
+
+  // Add default settings to db
+  const dbRes3 = await db.addSettings(client.id, config.user_default_settings);
+  if (dbRes3 !== true) { wss.send(client, { err: { msg: "Could not add settings" } }); return; }
+
+  // // Add default characters to db
+  const dbRes4 = await db.addCharacter(client.id, config.user_default_character);
+  if (dbRes4 !== true) { wss.send(client, { err: { msg: "Could not add character" } }); return; }
 
   wss.send(client, { succ: { msg: "Registered user successfully" } });
 });
@@ -160,7 +137,7 @@ wss.on("disconnect", async (msg, client) => {
   sim.removePlayer(client.id);
   const dbRes = await db.removeUserClientId(client.id);
   if (dbRes !== true) { return; }
-  //console.log("removed clientId from db");
+  //console.log("removed client_id from db");
 });
 
 const Simulator = require("./server/simulator.js");
@@ -173,14 +150,15 @@ wss.on("maps", async (msg, client) => {
   //verification neccessary!
 
   if (msg.action === "create") {
-    const dbRes = await db.addMap({ type: msg.type, maxPlayers: 10 });
+    const dbRes = await db.addMap({ type: msg.type, max_players: 10 });
     if (dbRes.insertedCount !== 1) { wss.send(client, { err: { msg: "error creating map" } }); return; }
     sim.addMap(dbRes.insertedId);
     wss.send(client, { message: "created map successfully" }); return;
   } else if (msg.action === "get") {
     const dbRes = await db.getMaps();
     if (typeof (dbRes) === "object") {
-      dbRes.forEach(map => { map.players = sim.getPlayersIdsOfMap(map._id) });
+      //is bs
+      //dbRes.forEach(map => { console.log(map); map.players = sim.getPlayersIdsOfMap(map.id) });
       wss.send(client, dbRes);
       return;
     }
@@ -249,28 +227,30 @@ wss.on("map", async (msg, client) => {
   }
 });
 
-// //Anti Cheat System
-// setInterval(() => {
-//   const offenders = sim.removeOffenders();
-//   offenders.forEach(offender => {
-//     wss.send(wss.clients[offender.id], { offences: offender.offences})
-//     wss.closeConnection(offender.id);
-//   })
-// }, 10000);
+/*
+//Anti Cheat System
+setInterval(() => {
+  const offenders = sim.removeOffenders();
+  offenders.forEach(offender => {
+    wss.send(wss.clients[offender.id], { offences: offender.offences})
+    wss.closeConnection(offender.id);
+  })
+}, 10000);
 
-// //On Close
-// const exitHandler = () => {
-//   db.close();
-//   process.exit();
-// }
-// //so the program will not close instantly
-// process.stdin.resume();
-// //do something when app is closing
-// process.on('exit', exitHandler);
-// //catches ctrl+c event
-// process.on('SIGINT', exitHandler);
-// // catches "kill pid" (for example: nodemon restart)
-// process.on('SIGUSR1', exitHandler);
-// process.on('SIGUSR2', exitHandler);
-// //catches uncaught exceptions
-// process.on('uncaughtException', exitHandler);
+//On Close
+const exitHandler = () => {
+  db.end();
+  process.exit();
+}
+//so the program will not close instantly
+process.stdin.resume();
+//do something when app is closing
+process.on('exit', exitHandler);
+//catches ctrl+c event
+process.on('SIGINT', exitHandler);
+// catches "kill pid" (for example: nodemon restart)
+process.on('SIGUSR1', exitHandler);
+process.on('SIGUSR2', exitHandler);
+//catches uncaught exceptions
+process.on('uncaughtException', exitHandler);
+*/

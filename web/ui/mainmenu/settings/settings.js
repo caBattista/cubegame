@@ -8,18 +8,15 @@ class Settings extends Mainmenu {
     }
 
     async createPage() {
-        const res = await this.game.ws.request("settings", { action: "get" });
-        const settings = res.settings;
+        const settings = await this.game.ws.request("settings", { action: "get" });
 
         //create form
         const formEl = this.createHTML(`<form class="settings"></form>`, this.parent);
-        Object.keys(settings).forEach(category => {
-            const catEl = this.createHTML(`<h1>${this.keyToHR(category)}</h1><div class="list"></div>`, formEl, 1);
-            Object.keys(settings[category]).forEach(setting => {
-                this.createHTML(`<div>${this.keyToHR(setting)}
-                    <input class="js-${category}" type="text" name="${setting}" value="${settings[category][setting]}">
+        let catEl = this.createHTML(`<h1>${this.keyToHR("all")}</h1><div class="list"></div>`, formEl, 1);
+        Object.keys(settings[0]).forEach(setting => {
+            this.createHTML(`<div>${this.keyToHR(setting)}
+                    <input class="js-all type="text" name="${setting}" value="${settings[0][setting]}">
                     </div>`, catEl);
-            })
         })
 
         //Add listeners

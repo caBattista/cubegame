@@ -10,7 +10,7 @@ class WSServer {
     this.wss = new WebSocket.Server({ server: server, clientTracking: false });
     this.wss.on('connection', (ws, req) => {
       const client = this.addClient(ws);
-      this.send(client, { clientId: client.id });
+      this.send(client, { client_id: client.id });
 
       this.onMessage(ws, msg => {
         console.log("WS: recieved from ", client.id, msg);

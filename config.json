@@ -1,0 +1,43 @@
+{
+    "database_settings": {
+        "host": "127.0.0.1",
+        "port": "5432",
+        "user": "postgres",
+        "password": "1234",
+        "database": "game"
+    },
+    "express_settings": {
+        "port": "1337"
+    },
+    "file_settings": {
+        "root_dir": "/web/",
+        "public_files": [
+            "/main/index.html",
+            "/main/favicon.png",
+            "/util/loader.js",
+            "/game/game.js",
+            "/util/ws.js",
+            "/ui/ui.js",
+            "/ui/ui.css",
+            "/ui/login/login.js",
+            "/ui/login/login.css"
+        ]
+    },
+    "user_default_settings": {
+        "sound_global_volume": 100,
+        "controls_forward": "KeyW",
+        "controls_backward": "KeyS",
+        "controls_left": "KeyA",
+        "controls_right": "KeyD",
+        "controls_jump": "Space",
+        "controls_sprint": "ShiftLeft",
+        "controls_crouch": "AltLeft",
+        "controls_interact": "KeyE",
+        "controls_melee": "KeyF",
+        "controls_granade": "KeyG",
+        "graphics_quality": "High"
+    },
+    "user_default_character": {
+        "name": "John"
+    }
+}

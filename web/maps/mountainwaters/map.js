@@ -85,7 +85,7 @@ class Map {
             sun.shadow.camera.far = 1000;
         }
         sun.position.set(170, 130, 280);
-        sun.lookAt(new THREE.Vector3(0, this.settings.player.height, 0));
+        sun.lookAt(new THREE.Vector3(0, 1, 0));
         // scene.add(new THREE.DirectionalLightHelper( sun ));
         // scene.add(new THREE.CameraHelper( sun.shadow.camera ));
         scene.add(sun);
@@ -104,75 +104,71 @@ class Map {
         skyBox.rotation.x += Math.PI / 2;
         skyBox.position.set(0, 5, 0);
         scene.add(skyBox);
+        this.elements.skyBox = skyBox;
 
         //##################### floor #####################
+        let material;
         if (this.settings.graphics.quality === "High") {
-            const meshFloor = new THREE.Mesh(
-                new THREE.PlaneGeometry(250, 250, 10, 10),
-                new THREE.MeshPhongMaterial({
-                    map: this.textures["maps/mountainwaters/textures/concrete/concrete_d.png"],
-                    bumpMap: this.textures["maps/mountainwaters/textures/concrete/concrete_b.png"],
-                    specularMap: this.textures["maps/mountainwaters/textures/concrete/concrete_s.png"],
-                    //color: 0xcccccc,
-                    wireframe: this.settings.useWireframe
-                })
-            );
-            meshFloor.rotation.x -= Math.PI / 2;
-            meshFloor.receiveShadow = true;
-            scene.add(meshFloor);
+            material = new THREE.MeshPhongMaterial({
+                map: this.textures["maps/mountainwaters/textures/concrete/concrete_d.png"],
+                bumpMap: this.textures["maps/mountainwaters/textures/concrete/concrete_b.png"],
+                specularMap: this.textures["maps/mountainwaters/textures/concrete/concrete_s.png"],
+                wireframe: this.settings.useWireframe
+            });
         } else {
-            const meshFloor = new THREE.Mesh(
-                new THREE.PlaneGeometry(250, 250, 10, 10),
-                new THREE.MeshPhongMaterial({
-                    //color: 0xcccccc,
-                    wireframe: this.settings.useWireframe
-                })
-            );
-            meshFloor.rotation.x -= Math.PI / 2;
-            meshFloor.receiveShadow = false;
-            scene.add(meshFloor);
+            material = new THREE.MeshPhongMaterial({
+                color: 0xCCCCCC,
+                wireframe: this.settings.useWireframe
+            });
         }
+        const meshFloor = new THREE.Mesh(new THREE.PlaneGeometry(250, 250, 10, 10), material);
+        meshFloor.rotation.x -= Math.PI / 2;
+        meshFloor.receiveShadow = this.settings.graphics.quality === "High";
+        scene.add(meshFloor);
+        this.elements.meshFloor = meshFloor;
 
-        // //##################### water #####################
-        // //not running in this version
-        // const waterGeometry = new THREE.PlaneBufferGeometry(8000, 8000);
-        // if (this.settings.graphics.quality === "High") {
-        //     const water = new THREE.Water(
-        //         waterGeometry,
-        //         {
-        //             textureWidth: 1024,
-        //             textureHeight: 1024,
-        //             waterNormals: this.textures['maps/mountainwaters/textures/water/waternormals.jpg'],
-        //             alpha: 0.9,
-        //             sunDirection: sun.position.clone().normalize(),
-        //             sunColor: 0xffffff,
-        //             waterColor: 0x00190f,
-        //             distortionScale: 5,
-        //             fog: scene.fog !== undefined,
-        //             wireframe: this.settings.useWireframe
-        //         }
-        //     );
-        //     water.material.uniforms.size.value = 1;
-        //     water.position.set(0, -1, 0);
-        //     water.rotation.x = - Math.PI / 2;
-        //     scene.add(water);
-        // } else {
-        //     const water = new THREE.Water(
-        //         waterGeometry,
-        //         {
-        //             alpha: 0.9,
-        //             sunDirection: sun.position.clone().normalize(),
-        //             sunColor: 0xffffff,
-        //             waterColor: 0x00190f,
-        //             distortionScale: 5,
-        //             fog: scene.fog !== undefined,
-        //             wireframe: this.settings.useWireframe
-        //         }
-        //     );
-        //     water.position.set(0, -1, 0);
-        //     water.rotation.x = - Math.PI / 2;
-        //     scene.add(water);
-        // }
+        //##################### water #####################
+        //not running in this version
+        const waterGeometry = new THREE.PlaneBufferGeometry(8000, 8000);
+        if (this.settings.graphics.quality === "High") {
+            const water = new THREE.Water(
+                waterGeometry,
+                {
+                    textureWidth: 1024,
+                    textureHeight: 1024,
+                    waterNormals: this.textures['maps/mountainwaters/textures/water/waternormals.jpg'],
+                    alpha: 0.9,
+                    sunDirection: sun.position.clone().normalize(),
+                    sunColor: 0xffffff,
+                    waterColor: 0x00190f,
+                    distortionScale: 5,
+                    fog: scene.fog !== undefined,
+                    wireframe: this.settings.useWireframe
+                }
+            );
+            water.material.uniforms.size.value = 1;
+            water.position.set(0, -1, 0);
+            water.rotation.x = - Math.PI / 2;
+            this.elements.water = water;
+            scene.add(water);
+        } else {
+            const water = new THREE.Water(
+                waterGeometry,
+                {
+                    alpha: 0.9,
+                    sunDirection: sun.position.clone().normalize(),
+                    sunColor: 0xffffff,
+                    waterColor: 0x00190f,
+                    distortionScale: 5,
+                    fog: scene.fog !== undefined,
+                    wireframe: this.settings.useWireframe
+                }
+            );
+            water.position.set(0, -1, 0);
+            water.rotation.x = - Math.PI / 2;
+            this.elements.water = water;
+            scene.add(water);
+        }
 
         //##################### mesh #####################
         const mesh = new THREE.Mesh(
@@ -182,13 +178,18 @@ class Map {
         mesh.position.set(0, 1, 0);
         mesh.receiveShadow = true;
         mesh.castShadow = true;
-        mesh.name = "rotateCube";
-        scene.add(mesh);
-
         this.elements.mesh = mesh;
+        scene.add(mesh);
+    }
+
+    addElementsToPhysics(pysics){
+    
     }
 
     animate() {
+        //water
+        this.elements.water.material.uniforms.time.value += 1.0 / 60.0;
+
         //center rotating cube
         this.elements.mesh.rotation.x += 0.01;
         this.elements.mesh.rotation.y += 0.02;

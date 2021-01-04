@@ -8,7 +8,7 @@ class Engine {
 
         this.settings = settings;
         this.settings.useWireframe = false;
-        this.settings.player = { height: 0.5, speed: 0.5, turnSpeed: Math.PI * 0.005, gravity: 0.3 };
+        this.settings.self = { height: 0.5, speed: 0.5, turnSpeed: Math.PI * 0.005, gravity: 0.3 };
         this.settings.bullet = { height: 0.4, speed: 2, end: 500, gravity: 0 };
 
         // ############# characters #############
@@ -69,14 +69,19 @@ class Engine {
         //scene
         this.scene = new THREE.Scene();
 
+        //physics
+        this.physics = new Pysics();
+
         //map
         this.map = new Map(this.settings);
         this.map.loadTextures(this.manager);
         this.map.addElementsToscene(this.scene);
+        //this.map.addElementsToPhysics(this.physics);
 
         //self
-        this.self = new Self(this.settings);
+        this.self = new Self(this.settings.self);
         this.self.addElementsToscene(this.scene);
+        //this.self.addElementsToPhysics(this.physics);
 
         //controls
         this.controls = new Controls(this.settings.controls);
@@ -108,17 +113,6 @@ class Engine {
             let changed = false;
             let changes = {};
 
-            //gravity
-            if (Math.abs(this.self.elements.yaw.position.x) > 125 || Math.abs(this.self.elements.yaw.position.z) > 125) {
-                this.self.elements.yaw.position.y -= this.settings.player.gravity;
-            }
-            else if (this.self.elements.yaw.position.y < this.settings.player.height) {
-                this.self.elements.yaw.position.y = this.settings.player.height;
-            }
-            else if (this.self.elements.yaw.position.y > this.settings.player.height) {
-                this.self.elements.yaw.position.y -= this.settings.player.gravity;
-            }
-
             if (this.controls.animate(this.self)) {
                 changed = true;
                 changes.self = this.controls.posRot;
@@ -134,37 +128,23 @@ class Engine {
 
         setInterval(() => {
             requestAnimationFrame(() => { renderScene(); });
-        }, 16);
-
+        }, 33);
     }
-
 }
 
 /*
+            //gravity
+            // if (Math.abs(this.self.elements.yaw.position.x) > 125 || Math.abs(this.self.elements.yaw.position.z) > 125) {
+            //     this.self.elements.yaw.position.y -= this.settings.player.gravity;
+            // }
+            // else if (this.self.elements.yaw.position.y < this.settings.player.height) {
+            //     this.self.elements.yaw.position.y = this.settings.player.height;
+            // }
+            // else if (this.self.elements.yaw.position.y > this.settings.player.height) {
+            //     this.self.elements.yaw.position.y -= this.settings.player.gravity;
+            // }
 
-            let obj = {}
-            for (let index = 0; index < window.slowit; index++) {
-                if (index % 2 === 0) {
-                    obj.id = 2;
-                } else {
-                    obj = {};
-                }
-            }
 animate() {
-        //water
-        this.water.material.uniforms.time.value += 1.0 / 60.0;
-
-        //gravity
-        if (Math.abs(this.self.yaw.position.x) > 125 || Math.abs(this.self.yaw.position.z) > 125) {
-            this.self.yaw.position.y -= this.settings.player.gravity;
-        }
-        else if (this.self.yaw.position.y < this.settings.player.height) {
-            this.self.yaw.position.y = this.settings.player.height;
-        }
-        else if (this.self.yaw.position.y > this.settings.player.height) {
-            this.self.yaw.position.y -= this.settings.player.gravity;
-        }
-
         //despawn whren out of boundsw
         if (this.self.yaw.position.y < -25 ||
             this.self.yaw.position.y > 250 ||

@@ -29,9 +29,10 @@ class Characters extends Mainmenu {
         });
 
         const res = await this.game.getCharacters();
-        Object.keys(res.characters).forEach(character => {
+        res.forEach(character => {
+            console.log(character);
             const el = this.createHTML(`<div>
-                <div title="${character}">${character}</div>
+                <div title="${character}">${character.name}</div>
                 <input type="submit" value="Edit">
                 </div>`, elements[1]);
             // el.children[2].addEventListener("click", async ev => {

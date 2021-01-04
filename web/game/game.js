@@ -15,12 +15,12 @@ class Game {
         this.ui = new Ui(this);
 
         //login
-        // await this.loader.load("ui/login/login", 1);
-        // await new Login(this).login();
-        // await this.loader.unload("ui/login/login");
+        await this.loader.load("ui/login/login", 1);
+        await new Login(this).login();
+        await this.loader.unload("ui/login/login");
 
         //Auto login
-        await this.ws.request("login", { username: '123', password: '123' });
+        //await this.ws.request("login", { username: '123', password: '123' });
 
         //mainmenu
         await this.loader.load("ui/mainmenu/mainmenu", 1);
@@ -55,11 +55,12 @@ class Game {
         await this.loader.load("engine/engine", 1);
         await this.loader.load("engine/self");
         await this.loader.load("engine/controls");
+        await this.loader.load("engine/physics");
         await this.loader.load("maps/mountainwaters/water");
         await this.loader.load("maps/mountainwaters/map");
         const settings = await this.ws.request("settings", { action: "get" });
         const characters = await this.ws.request("characters", { action: "get" });
-        this.engine = new Engine(this, settings.settings), characters;
+        this.engine = new Engine(this, settings.settings, characters);
     }
 
     async leaveMap() {

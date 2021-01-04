@@ -75,7 +75,7 @@ class Simulator {
                 this.addOffence(player, "pgna");
             }
 
-            //check if player is outside map bounds
+            //check if player is outside map bounds (only needs to be checked every second)
             if (posRot.position.x < -250 || posRot.position.x > 250 ||
                 posRot.position.y < -250 || posRot.position.y > 250 ||
                 posRot.position.z < -250 || posRot.position.z > 250

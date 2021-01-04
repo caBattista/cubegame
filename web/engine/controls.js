@@ -55,6 +55,7 @@ class Controls {
             prevPosRot.rotation.z === curentPosRot.rotation.z
             ? false : true;
     }
+    //Only Send Position and Veloctiy-Vector when changed
 
     animate(self) {
         let doOrder = { set: [], fion: [], fifo: [] };
@@ -66,6 +67,7 @@ class Controls {
             }
         });
         self.do("setDefaults");
+        //self.do("moveForward");
         doOrder.set.forEach(action => { self.do(action); })
         doOrder.fion.forEach(action => { self.do(action); })
         doOrder.fifo.forEach(action => { self.do(action); })
