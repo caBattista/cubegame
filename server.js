@@ -141,6 +141,7 @@ wss.on("disconnect", async (msg, client) => {
 });
 
 const Simulator = require("./server/simulator.js");
+const { settings } = require('cluster');
 const sim = new Simulator();
 
 // Main Menu
@@ -151,8 +152,8 @@ wss.on("maps", async (msg, client) => {
 
   if (msg.action === "create") {
     const dbRes = await db.addMap({ type: msg.type, max_players: 10 });
-    if (dbRes.insertedCount !== 1) { wss.send(client, { err: { msg: "error creating map" } }); return; }
-    sim.addMap(dbRes.insertedId);
+    if (dbRes.length !== 1) { wss.send(client, { err: { msg: "error creating map" } }); return; }
+    sim.addMap(dbRes[0].id);
     wss.send(client, { message: "created map successfully" }); return;
   } else if (msg.action === "get") {
     const dbRes = await db.getMaps();
@@ -186,17 +187,36 @@ wss.on("characters", async (msg, client) => {
 
 wss.on("settings", async (msg, client) => {
 
-  //verification neccessary!
+  //better verification neccessary!
 
   if (msg.action === "get") {
+    const settings = await db.getSettings(client.id);
 
-    const dbRes = await db.getSettings(client.id);
-    if (typeof (dbRes) === "object") { wss.send(client, dbRes); return; }
+    //fill template with values
+    let template = [];
+    config.user_settings_template.forEach(category => {
+      let newCategory = { display_name: category.display_name, children: [] }
+      category.children.forEach(setting => {
+        newCategory.children.push({
+          display_name: setting.display_name,
+          name: setting.name,
+          type: setting.type,
+          value: settings[setting.name]
+        })
+      })
+      template.push(newCategory);
+    })
+
+    if (typeof (settings) === "object") { wss.send(client, template); return; }
     else { wss.send(client, { err: { msg: "error getting map" } }); return; }
 
+  } else if (msg.action === "getRaw") {
+    const settings = await db.getSettings(client.id);
+    if (typeof (settings) === "object") { wss.send(client, settings); return; }
+    else { wss.send(client, { err: { msg: "error getting map" } }); return; }
   } else if (msg.action === "set") {
 
-    const dbRes = await db.setSettings(client.id, msg);
+    const dbRes = await db.setSettings(client.id, msg.name, msg.value, msg.type);
     if (dbRes !== true) { wss.send(client, { err: { msg: "error changing settings" } }); return; }
     wss.send(client, { message: "changed settings successfully" }); return;
 

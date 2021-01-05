@@ -23,6 +23,81 @@
             "/ui/login/login.css"
         ]
     },
+    "user_settings_template": [
+        {
+            "display_name": "Sound",
+            "children": [
+                {
+                    "name": "sound_global_volume",
+                    "display_name": "Global Volume",
+                    "type": "integer"
+                }
+            ]
+        },
+        {
+            "display_name": "Controls",
+            "children": [
+                {
+                    "display_name": "Forward",
+                    "name": "controls_forward",
+                    "type": "text"
+                },
+                {
+                    "display_name": "Backward",
+                    "name": "controls_backward",
+                    "type": "text"
+                },
+                {
+                    "display_name": "Left",
+                    "name": "controls_left",
+                    "type": "text"
+                },
+                {
+                    "display_name": "Right",
+                    "name": "controls_right",
+                    "type": "text"
+                },
+                {
+                    "display_name": "Jump",
+                    "name": "controls_jump",
+                    "type": "text"
+                },
+                {
+                    "display_name": "Sprint",
+                    "name": "controls_sprint",
+                    "type": "text"
+                },
+                {
+                    "display_name": "Crouch",
+                    "name": "controls_crouch",
+                    "type": "text"
+                },
+                {
+                    "display_name": "Interact",
+                    "name": "controls_interact",
+                    "type": "text"
+                },
+                {
+                    "display_name": "Melee",
+                    "name": "controls_melee",
+                    "type": "text"
+                },
+                {
+                    "display_name": "Granade",
+                    "name": "controls_granade",
+                    "type": "text"
+                }
+            ]
+        },
+        {
+            "display_name": "Gameplay",
+            "children": []
+        },
+        {
+            "display_name": "Graphics",
+            "children": []
+        }
+    ],
     "user_default_settings": {
         "sound_global_volume": 100,
         "controls_forward": "KeyW",
@@ -38,6 +113,6 @@
         "graphics_quality": "High"
     },
     "user_default_character": {
-        "name": "John"
+        "display_name": "John"
     }
 }

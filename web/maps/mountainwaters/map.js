@@ -73,7 +73,7 @@ class Map {
         scene.add(ambientLight);
 
         const sun = new THREE.DirectionalLight(0xffffff, 0.5);
-        if (this.settings.graphics.quality === "High") {
+        if (this.settings.graphics_quality === "High") {
             sun.castShadow = true;
             sun.shadow.camera.left = -200;
             sun.shadow.camera.right = 200;
@@ -108,7 +108,7 @@ class Map {
 
         //##################### floor #####################
         let material;
-        if (this.settings.graphics.quality === "High") {
+        if (this.settings.graphics_quality === "High") {
             material = new THREE.MeshPhongMaterial({
                 map: this.textures["maps/mountainwaters/textures/concrete/concrete_d.png"],
                 bumpMap: this.textures["maps/mountainwaters/textures/concrete/concrete_b.png"],
@@ -123,14 +123,14 @@ class Map {
         }
         const meshFloor = new THREE.Mesh(new THREE.PlaneGeometry(250, 250, 10, 10), material);
         meshFloor.rotation.x -= Math.PI / 2;
-        meshFloor.receiveShadow = this.settings.graphics.quality === "High";
+        meshFloor.receiveShadow = this.settings.graphics_quality === "High";
         scene.add(meshFloor);
         this.elements.meshFloor = meshFloor;
 
         //##################### water #####################
         //not running in this version
         const waterGeometry = new THREE.PlaneBufferGeometry(8000, 8000);
-        if (this.settings.graphics.quality === "High") {
+        if (this.settings.graphics_quality === "High") {
             const water = new THREE.Water(
                 waterGeometry,
                 {

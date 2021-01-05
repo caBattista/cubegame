@@ -1,7 +1,7 @@
 class Controls {
 
-    constructor(controlSettings) {
-        this.keyMap = this.mapKeysFromSettings(controlSettings);
+    constructor(settings) {
+        this.keyMap = this.mapKeysFromSettings(settings);
         this.pressedKeys = {};
     }
 

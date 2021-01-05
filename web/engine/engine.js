@@ -2,7 +2,7 @@ class Engine {
     constructor(game, settings, characters) {
         this.game = game;
 
-        this.addCid = url => { return url + "?clientId=" + this.game.loader.clientId; };
+        this.addCid = url => { return url + "?client_id=" + this.game.loader.client_id; };
 
         // ############# settings #############
 
@@ -84,7 +84,7 @@ class Engine {
         //this.self.addElementsToPhysics(this.physics);
 
         //controls
-        this.controls = new Controls(this.settings.controls);
+        this.controls = new Controls(this.settings);
         this.controls.initControls(this.self, this.renderer.domElement);
     }
 

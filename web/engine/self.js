@@ -60,12 +60,12 @@ class Self {
 
     do(option) {
         switch (option) {
-            case "moveForward": this.moveDegRad(0); break;
-            case "moveBackward": this.moveDegRad(Math.PI); break;
-            case "moveLeft": this.moveDegRad(Math.PI / 2); break;
-            case "moveRight": this.moveDegRad(-Math.PI / 2); break;
-            case "jump": this.elements.yaw.position.y += this.settings.speed; break;
-            case "sprint":
+            case "controls_forward": this.moveDegRad(0); break;
+            case "controls_backward": this.moveDegRad(Math.PI); break;
+            case "controls_Left": this.moveDegRad(Math.PI / 2); break;
+            case "controls_Right": this.moveDegRad(-Math.PI / 2); break;
+            case "controls_jump": this.elements.yaw.position.y += this.settings.speed; break;
+            case "controls_sprint":
                 this.settings.speed = 2;
                 break;
             case "setDefaults":

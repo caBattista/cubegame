@@ -35,9 +35,9 @@ class Characters extends Mainmenu {
                 <div title="${character}">${character.name}</div>
                 <input type="submit" value="Edit">
                 </div>`, elements[1]);
-            // el.children[2].addEventListener("click", async ev => {
-            //     this.game.editCharacter(character._id);
-            // });
+            el.children[1].addEventListener("click", async ev => {
+                this.game.editCharacter();
+            });
         });
     }
 }

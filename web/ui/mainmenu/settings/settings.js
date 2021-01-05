@@ -8,15 +8,17 @@ class Settings extends Mainmenu {
     }
 
     async createPage() {
-        const settings = await this.game.ws.request("settings", { action: "get" });
+        const res = await this.game.ws.request("settings", { action: "get" });
 
         //create form
         const formEl = this.createHTML(`<form class="settings"></form>`, this.parent);
-        let catEl = this.createHTML(`<h1>${this.keyToHR("all")}</h1><div class="list"></div>`, formEl, 1);
-        Object.keys(settings[0]).forEach(setting => {
-            this.createHTML(`<div>${this.keyToHR(setting)}
-                    <input class="js-all type="text" name="${setting}" value="${settings[0][setting]}">
+        res.forEach(category => {
+            let catEl = this.createHTML(`<h1>${category.display_name}</h1><div class="list"></div>`, formEl, 1);
+            category.children.forEach(setting => {
+                this.createHTML(`<div>${setting.display_name}
+                    <input class="js-${category.display_name}} type="${setting.type}" name="${setting.name}" value="${setting.value}">
                     </div>`, catEl);
+            })
         })
 
         //Add listeners
@@ -29,7 +31,7 @@ class Settings extends Mainmenu {
                 const keyListener = async ev2 => {
                     ev2.preventDefault();
                     document.removeEventListener("keydown", keyListener);
-                    await this.saveSetting("controls", ev.target.name, ev2.code);
+                    await this.saveSetting(ev.target.name, ev2.code, ev.target.type);
                     ev.target.value = ev2.code;
                 }
                 document.addEventListener("keydown", keyListener);
@@ -51,10 +53,10 @@ class Settings extends Mainmenu {
         //     location.reload();
         // })
     }
-    saveSetting(category, name, value) {
+    saveSetting(name, value, type) {
         return new Promise(async (res, rej) => {
             res(await this.game.ws.request("settings",
-                { action: "set", category: category, name: name, value: value }));
+                { action: "set", name: name, value: value, type: type }));
         });
     }
 }
