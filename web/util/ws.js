@@ -2,8 +2,7 @@ class Ws {
 
     async connect() {
         return new Promise((res, rej) => {
-            this.ws = new WebSocket(
-                location.protocol === "https:" ? "wss://" : "ws://" + location.host);
+            this.ws = new WebSocket(location.origin.replace(/^http/, 'ws'));
             this.ws.onopen = () => {
                 this.ws.onmessage = e => {
                     const data = JSON.parse(e.data);
