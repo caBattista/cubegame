@@ -15,9 +15,9 @@ class Game {
         this.ui = new Ui(this);
 
         //login
-        // await this.loader.load("ui/login/login", 1);
-        // await new Login(this).login();
-        // await this.loader.unload("ui/login/login");
+        await this.loader.load("ui/login/login", 1);
+        await new Login(this).login();
+        await this.loader.unload("ui/login/login");
 
         //Auto login
         await this.ws.request("login", { username: '123', password: '123' });

@@ -76,8 +76,8 @@ wss.on("login", async (msg, client) => {
   const pswRes = await argon2.verify(dbRes[0].password, dbRes[0].salt + msg.password + pepper)
   if (pswRes !== true) { wss.send(client, { err: { msg: "Password verification failed" } }); return; }
 
-  //close connection if same client is logged in
-  await wss.closeConnection(dbRes[0].client_id);
+  //close connection if same client is logged in //doesnt work on heroku
+  //await wss.closeConnection(dbRes[0].client_id);
 
   //Add client_id to db
   const dbRes2 = await db.addUserClientId(dbRes[0].id, client.id);

@@ -8,7 +8,7 @@ class Database {
     }
 
     async prepareDatabase() {
-        //await this.pgClient.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
+        await this.pgClient.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
         
         //await this.pgClient.query(`DELETE FROM characters WHERE owner = (SELECT id FROM users WHERE username = $1)`, ["123"]);
         // await this.pgClient.query(`DELETE FROM settings WHERE owner = (SELECT id FROM users WHERE username = $1)`, ["123"]);

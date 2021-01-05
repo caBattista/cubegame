@@ -1,5 +1,15 @@
 {
     "database_settings": {
+        "host": "ec2-52-211-161-21.eu-west-1.compute.amazonaws.com",
+        "port": "5432",
+        "user": "vpfoytssjokdey",
+        "password": "dec4153e7ceb1e06388565d7dec34e426ca9f5e522e91332019e031fff30ba58",
+        "database": "d9p8qv3ho5dhob",
+        "ssl": {
+            "rejectUnauthorized": false
+        }
+    },
+    "database_settings_local": {
         "host": "127.0.0.1",
         "port": "5432",
         "user": "postgres",
