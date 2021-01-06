@@ -40,7 +40,7 @@ class Settings extends Mainmenu {
 
             } else if (ev.target.classList.contains("js-Acount")) {
                 await this.game.ws.request("deleteUser", {});
-                this.game.ws.close(4001, "Deleted User");
+                this.game.ws.close(4000, "Deleted User");
                 location.reload();
             }
         })
