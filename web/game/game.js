@@ -20,7 +20,7 @@ class Game {
         await this.loader.unload("ui/login/login");
 
         //Auto login
-        await this.ws.request("login", { username: '123', password: '123' });
+        //await this.ws.request("login", { username: '123', password: '123' });
 
         //mainmenu
         await this.loader.load("ui/mainmenu/mainmenu", 1);
