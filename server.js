@@ -145,11 +145,11 @@ wss.on("deleteUser", async (msg, client) => {
   //console.log("deleted User from db");
 });
 
-wss.on("disconnect", async (msg, client) => {
+wss.on("disconnect", async (msg, client) => {s
   sim.removePlayer(client.id);
   const dbRes = await db.removeUserClientId(client.id);
   if (dbRes !== true) { return; }
-  //console.log("removed client_id from db");
+  console.log("removed client_id from db");
 });
 
 const Simulator = require("./server/simulator.js");
