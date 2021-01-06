@@ -48,10 +48,7 @@ app.use('/', async (req, res) => {
 const WSServer = require("./server/wsserver.js");
 const wss = new WSServer(server);
 
-wss.on("ping", (msg, client) => {
-  msg.serverHandeled = new Date();
-  wss.send(client, msg);
-})
+
 
 //Request Validation
 const Joi = require('joi');
@@ -64,6 +61,14 @@ const argon2 = require('argon2');
 const pepper = "|>3|>|>3|2";
 
 //Request handeling
+
+//Handle Ping to keep websockets open
+wss.on("ping", (msg, client) => {
+  msg.serverHandeled = new Date().now();
+  wss.send(client, msg);
+})
+
+//Handle login
 wss.on("login", async (msg, client) => {
 
   //Check message

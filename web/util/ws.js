@@ -13,7 +13,7 @@ class Ws {
                     document.body.innerHTML =
                         "<h1>Your websocket connection has closed.</h1>" +
                         "<h2>Possible reasosns could be you have logged into another device,\n" +
-                        "the server has been shutdown or you have been hacked.<h2>";
+                        "the server has been shutdown or you have been hacked.</h2>";
                 };
                 this.keepAlive(50000);
             };
@@ -29,15 +29,16 @@ class Ws {
     }
 
     ping() {
-        this.request("ping", { timeSent: new Date() })
+        const timeSent = new Date().now();
+        this.request("ping", {})
             .then(res => {
                 console.log(res);
                 const now = new Date();
                 this.currentPing = {
                     lastPingRecieved: now,
-                    roundTrip: now - new Date(res.timeSent),
-                    timeToServer: new Date(res.serverHandeled) - new Date(res.timeSent),
-                    timeToClient: new Date(res.serverHandeled) - now
+                    roundTrip: now - timeSent,
+                    toServer: new Date(res.serverHandeled).now() - timeSent,
+                    toClient: new Date(res.serverHandeled).now() - now
                 }
                 console.log(this.currentPing);
             })
