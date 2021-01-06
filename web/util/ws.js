@@ -10,12 +10,19 @@ class Ws {
                     res(data.client_id);
                 };
                 this.ws.onclose = e => {
-                    document.body.innerHTML = "It seems a though your connection was closed.\n" +
-                        "Possible reasosns could be you have logged into another device.\n" +
-                        "The server has been shutdown or you have been hacked.";
+                    document.body.innerHTML = "<h1>Your Websocket Connection has closed.</h1>" +
+                        "<h2>Possible reasosns could be you have logged into another device.\n" +
+                        "The server has been shutdown or you have been hacked.<h2>";
                 };
+                this.keepAlive();
             };
         });
+    }
+
+    keepAlive() {
+        setInterval(() => {
+            this.ws.send();
+        }, 50000)
     }
 
     request(rqType, msg) {
