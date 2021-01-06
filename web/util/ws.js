@@ -35,7 +35,7 @@ class Ws {
                 this.currentPing = {
                     lastPingRecieved: now,
                     roundTrip: now - res.timeSent,
-                    timeToServer: res.timeSent - serverHandeled,
+                    timeToServer: res.timeSent - res.serverHandeled,
                     timeToClient: serverHandeled - now
                 }
                 console.log(this.currentPing);
