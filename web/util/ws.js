@@ -14,7 +14,7 @@ class Ws {
                         "<h1>Your websocket connection has closed.</h1>" +
                         "<h1>Possible reasosns could be you have logged into another device,\n" +
                         "the server has been shutdown or you have been hacked.</h1>";
-                };
+                    };
                 this.keepAlive(50000);
             };
         });

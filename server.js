@@ -64,7 +64,7 @@ const pepper = "|>3|>|>3|2";
 
 //Handle Ping to keep websockets open
 wss.on("ping", (msg, client) => {
-  msg.serverHandeled = new Date().now();
+  msg.serverHandeled = Date.now();
   wss.send(client, msg);
 })
 
