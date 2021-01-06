@@ -41,7 +41,6 @@ class Mainmenu extends Ui {
             if (ev.target.tagName === "INPUT") {
                 const inputClicked = ev.target;
                 if (inputClicked.value === "Logout") {
-                    this.game.ws.close();
                     location.reload();
                 } else /*if (this.state.selectedPage !== inputClicked.value)*/ {
                     this.state.selectedPage = inputClicked.value;
