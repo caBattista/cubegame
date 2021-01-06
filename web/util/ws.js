@@ -31,12 +31,13 @@ class Ws {
     ping() {
         this.request("ping", { timeSent: new Date() })
             .then(res => {
+                console.log(res);
                 const now = new Date();
                 this.currentPing = {
                     lastPingRecieved: now,
-                    roundTrip: now - res.timeSent,
-                    timeToServer: res.timeSent - res.serverHandeled,
-                    timeToClient: res.serverHandeled - now
+                    roundTrip: now - new Date(res.timeSent),
+                    timeToServer: new Date(res.timeSent) - new Date(res.serverHandeled),
+                    timeToClient: new Date(res.serverHandeled) - now
                 }
                 console.log(this.currentPing);
             })
