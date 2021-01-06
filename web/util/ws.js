@@ -12,8 +12,8 @@ class Ws {
                 this.ws.onclose = e => {
                     document.body.innerHTML =
                         "<h1>Your websocket connection has closed.</h1>" +
-                        "<h2>Possible reasosns could be you have logged into another device,\n" +
-                        "the server has been shutdown or you have been hacked.</h2>";
+                        "<h1>Possible reasosns could be you have logged into another device,\n" +
+                        "the server has been shutdown or you have been hacked.</h1>";
                 };
                 this.keepAlive(50000);
             };
@@ -29,11 +29,11 @@ class Ws {
     }
 
     ping() {
-        const timeSent = new Date().now();
+        const timeSent = Date.now();
         this.request("ping", {})
             .then(res => {
                 console.log(res);
-                const now = new Date();
+                const now = Date.now();
                 this.currentPing = {
                     lastPingRecieved: now,
                     roundTrip: now - timeSent,
