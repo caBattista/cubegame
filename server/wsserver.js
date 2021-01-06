@@ -19,14 +19,9 @@ class WSServer {
       })
 
       this.onClose(ws, msg => {
-        if (client.closedByServerCallback) {
-          delete this.clients[client.id];
-          client.closedByServerCallback();
-        } else {
-          const handlers = this.handlers["disconnect"];
-          if (handlers) handlers.forEach(handler => { handler.handler(msg.msg, client) });
-          delete this.clients[client.id];
-        }
+        const handlers = this.handlers["disconnect"];
+        if (handlers) handlers.forEach(handler => { handler.handler(msg.msg, client) });
+        delete this.clients[client.id];
       })
 
     });
@@ -57,7 +52,6 @@ class WSServer {
     return new Promise((res, rej) => {
       if (!this.clients[id]) { res(0); return; }
       this.clients[id].closedByServer = true;
-      this.clients[id].closedByServerCallback = () => { res(0) };
       this.clients[id].ws.close();
     });
   }

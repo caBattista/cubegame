@@ -5,7 +5,7 @@ class Login extends Ui {
         this.game = game;
     }
 
-    async login(ws) {
+    async login() {
         return new Promise((resolve, reject) => {
             const el = this.createHTML(`
             <h1>Please log in</h1>
@@ -19,25 +19,31 @@ class Login extends Ui {
                 <input type="submit" value="Register">
             </div>
             `, document.body, 1);
-            const handleSubmit = async ev => {
-                const res = await this.game.ws.request("login", this.formToJSON(el));
+            const handleSubmit = async (type, data) => {
+                //start websocket
+                await this.game.loader.load("util/ws");
+                this.game.ws = new Ws();
+                this.game.loader.addClientId(await this.game.ws.connect());
+
+                const res = await this.game.ws.request(type, data);
                 if (res.succ) {
                     document.body.innerHTML = "";
                     resolve();
-                } else { alert(res.err.msg); }
+                } else {
+                    this.game.ws.close();
+                    alert(res.err.msg);
+                }
             }
             el.addEventListener("keyup", ev => {
                 if (ev.keyCode !== 13) { return; }
                 ev.preventDefault();
-                handleSubmit();
+                handleSubmit("login", this.formToJSON(el));
             });
-            el.children[5].addEventListener("click", handleSubmit)
-            el.children[6].addEventListener("click", async ev => {
-                const res = await this.game.ws.request("register", this.formToJSON(el));
-                if (res.succ) {
-                    document.body.innerHTML = "";
-                    resolve();
-                } else { alert(res.err.msg); }
+            el.children[5].addEventListener("click", ev => {
+                handleSubmit("login", this.formToJSON(el));
+            });
+            el.children[6].addEventListener("click", ev => {
+                handleSubmit("register", this.formToJSON(el));
             });
         });
     }

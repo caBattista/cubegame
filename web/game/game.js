@@ -5,11 +5,6 @@ class Game {
     }
 
     async start() {
-        //start websocket
-        await this.loader.load("util/ws");
-        this.ws = new Ws();
-        this.loader.addClientId(await this.ws.connect());
-
         //load ui
         await this.loader.load("ui/ui", 1);
         this.ui = new Ui(this);

@@ -39,7 +39,7 @@ class Database {
 
     removeUserClientId(client_id) {
         return new Promise((res, rej) => {
-            this.pgClient.query(`UPDATE users SET client_id = NULL WHERE id = $1::uuid`, [client_id]).then(pgRes => {
+            this.pgClient.query(`UPDATE users SET client_id = NULL WHERE client_id = $1::text`, [client_id]).then(pgRes => {
                 res(true)
             }).catch(err => {
                 rej(this.handleError(err));

@@ -14,17 +14,18 @@ class Ws {
                         "<h1>Your websocket connection has closed.</h1>" +
                         "<h1>Possible reasosns could be you have logged into another device,\n" +
                         "the server has been shutdown or you have been hacked.</h1>";
-                    };
+                    setTiemeout(() => { location.reload() }, 5000);
+                };
                 this.keepAlive(50000);
             };
         });
     }
 
     keepAlive(millis) {
-        const interv = setInterval(() => {
+        this.pingInterv = setInterval(() => {
             this.ws.readyState === WebSocket.OPEN ?
                 this.ping() :
-                clearInterval(interv);
+                clearInterval(this.pingInterv);
         }, millis);
     }
 
@@ -58,6 +59,7 @@ class Ws {
     }
 
     close() {
+        clearInterval(this.pingInterv);
         this.ws.close();
     }
 }

@@ -5,14 +5,20 @@
 
 .side {
     flex: 0 0 200px;
-    background-color: #eee;
+    background-color: rgb(85, 96, 128);
     text-align: center;
+    box-shadow: 0 0 2px #000;
 }
 
 .side>ul {
     list-style: none;
     padding: 0;
     margin: 0;
+}
+
+.side>ul>li {
+    padding: 10px 20px;
+    text-align: left;
 }
 
 .side>ul>li {

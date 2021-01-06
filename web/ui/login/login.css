@@ -9,9 +9,13 @@ h1{
     transform: translate(-50%, -50%);
     box-sizing: border-box;
     padding: 20px;
-    background-color: #fff;
-    box-shadow: 0 0 3px #aaa;
-    border-radius: 20px;
+    border-radius: 2px;
+    background-color: rgb(85, 96, 128);
+    box-shadow: 0 0 2px #222;
+}
+
+.login > h3{
+    margin-left: 0;
 }
 
 .login > h3:first-child{
