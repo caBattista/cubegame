@@ -15,7 +15,7 @@ class Ws {
                         "<h1>Possible reasosns could be you have logged into another device,\n" +
                         "the server has been shutdown or you have been hacked.</h1>";
                     };
-                this.keepAlive(50000);
+                this.keepAlive(60000);
             };
         });
     }
@@ -32,7 +32,6 @@ class Ws {
         const timeSent = Date.now();
         this.request("ping", {})
             .then(res => {
-                console.log(res);
                 const now = Date.now();
                 this.currentPing = {
                     lastPingRecieved: now,
