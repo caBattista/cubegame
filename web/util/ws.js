@@ -15,17 +15,17 @@ class Ws {
                         "<h2>Possible reasosns could be you have logged into another device,\n" +
                         "the server has been shutdown or you have been hacked.<h2>";
                 };
-                this.keepAlive();
+                this.keepAlive(50000);
             };
         });
     }
 
-    keepAlive() {
+    keepAlive(millis) {
         const interv = setInterval(() => {
             this.ws.readyState === WebSocket.OPEN ?
                 this.ping() :
                 clearInterval(interv);
-        }, 50000);
+        }, millis);
     }
 
     ping() {
@@ -36,7 +36,7 @@ class Ws {
                 this.currentPing = {
                     lastPingRecieved: now,
                     roundTrip: now - new Date(res.timeSent),
-                    timeToServer: new Date(res.timeSent) - new Date(res.serverHandeled),
+                    timeToServer: new Date(res.serverHandeled) - new Date(res.timeSent),
                     timeToClient: new Date(res.serverHandeled) - now
                 }
                 console.log(this.currentPing);
