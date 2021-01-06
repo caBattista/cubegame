@@ -100,12 +100,23 @@
             ]
         },
         {
-            "display_name": "Gameplay",
-            "children": []
-        },
-        {
             "display_name": "Graphics",
-            "children": []
+            "children": [
+                {
+                    "display_name": "Quality",
+                    "name": "graphics_quality",
+                    "type": "text"
+                }
+            ]
+        }, 
+        {
+            "display_name": "Acount",
+            "children": [
+                {
+                    "display_name": "Delete",
+                    "type": "input"
+                }
+            ]
         }
     ],
     "user_default_settings": {

@@ -9,24 +9,17 @@ class Ws {
                     console.log("WS: ", data.client_id);
                     res(data.client_id);
                 };
-                this.ws.onclose = e => {
-                    document.body.innerHTML =
-                        "<h1>Your websocket connection has closed.</h1>" +
-                        "<h1>Possible reasosns could be you have logged into another device,\n" +
-                        "the server has been shutdown or you have been hacked.</h1>";
-                    setTiemeout(() => { location.reload() }, 5000);
+                this.ws.onclose = ev => {
+                    clearInterval(this.pingInterv);
+                    if(ev.code >= 4000){
+                        document.body.innerHTML = `<h1>Your websocket connection has closed.</h1>
+                        <h1>Status Code: ${ev.code} ${ev.reason ? ", Reason: " + ev.reason : ""}</h1>
+                        <h1><input style="vertical-align: center" type="submit" value="Reload" onclick="location.reload()"/></h1>`;
+                    }
                 };
-                this.keepAlive(50000);
+                this.pingInterv = setInterval(() => {this.ping();}, 50000);
             };
         });
-    }
-
-    keepAlive(millis) {
-        this.pingInterv = setInterval(() => {
-            this.ws.readyState === WebSocket.OPEN ?
-                this.ping() :
-                clearInterval(this.pingInterv);
-        }, millis);
     }
 
     ping() {
@@ -58,8 +51,8 @@ class Ws {
         this.ws.send(JSON.stringify(json));
     }
 
-    close() {
+    close(code, reason) {
         clearInterval(this.pingInterv);
-        this.ws.close();
+        this.ws.close(code, reason);
     }
 }

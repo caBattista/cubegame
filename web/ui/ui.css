@@ -29,14 +29,7 @@ textarea:focus, input:focus, input:hover {
     outline: none;
     box-shadow: none;
     background-color: rgb(38 184 153);
-}
-
-input[type="submit"]:hover{
     color: #fff;
-}
-
-input[type="submit"]:focus {
-    background-color: rgb(65, 74, 107);
 }
 
 h1 {

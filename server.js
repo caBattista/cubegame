@@ -116,10 +116,7 @@ wss.on("register", async (msg, client) => {
     username: msg.username,
     password: msg.password,
     salt: crypto.randomBytes(16).toString('hex'),
-    client_id: client.id,
-    characters: {
-      John: {}
-    }
+    client_id: client.id
   }
   user.password = await argon2.hash(user.salt + user.password + pepper);
 
@@ -132,7 +129,7 @@ wss.on("register", async (msg, client) => {
   if (dbRes3 !== true) { wss.send(client, { err: { msg: "Could not add settings" } }); return; }
 
   // // Add default characters to db
-  const dbRes4 = await db.addCharacter(client.id, config.user_default_character);
+  const dbRes4 = await db.addCharacter(client.id, config.user_default_character.display_name);
   if (dbRes4 !== true) { wss.send(client, { err: { msg: "Could not add character" } }); return; }
 
   wss.send(client, { succ: { msg: "Registered user successfully" } });
@@ -142,15 +139,12 @@ wss.on("deleteUser", async (msg, client) => {
   const dbRes = await db.deleteUser(client.id);
   if (dbRes !== true) { wss.send(client, { err: { msg: "Could not delete user" } }); return; }
   wss.send(client, { message: "deleted user" });
-  //console.log("deleted User from db");
 });
 
 wss.on("disconnect", async (msg, client) => {
-  console.log("disconnect", client.id);
   sim.removePlayer(client.id);
   const dbRes = await db.removeUserClientId(client.id);
   if (dbRes !== true) { console.log("err deleting client_id"); return; }
-  console.log("removed client_id from db");
 });
 
 const Simulator = require("./server/simulator.js");

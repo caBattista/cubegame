@@ -32,7 +32,7 @@ class Characters extends Mainmenu {
         res.forEach(character => {
             console.log(character);
             const el = this.createHTML(`<div>
-                <div title="${character}">${character.name}</div>
+                <div title="${character.id}">${character.name}</div>
                 <input type="submit" value="Edit">
                 </div>`, elements[1]);
             el.children[1].addEventListener("click", async ev => {

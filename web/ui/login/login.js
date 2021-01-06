@@ -31,8 +31,8 @@ class Login extends Ui {
                     document.body.innerHTML = "";
                     resolve();
                 } else {
-                    this.game.ws.close();
-                    alert(res.err.msg);
+                    this.game.ws.close(4000, res.err.msg);
+                    el.previousSibling.textContent = res.err.msg;
                 }
             }
             el.addEventListener("keyup", ev => {

@@ -16,16 +16,17 @@ class Settings extends Mainmenu {
             let catEl = this.createHTML(`<h1>${category.display_name}</h1><div class="list"></div>`, formEl, 1);
             category.children.forEach(setting => {
                 this.createHTML(`<div>${setting.display_name}
-                    <input class="js-${category.display_name}} type="${setting.type}" name="${setting.name}" value="${setting.value}">
+                    <input class="js-${category.display_name}" type="${setting.type}" name="${setting.name}" value="${setting.value}">
                     </div>`, catEl);
             })
         })
 
         //Add listeners
-        formEl.addEventListener("click", ev => {
-            if (ev.target.classList.contains("js-gameplay")) {
+        formEl.addEventListener("click", async ev => {
+            console.log(ev.target.classList);
+            if (ev.target.classList.contains("js-Gameplay")) {
 
-            } else if (ev.target.classList.contains("js-controls")) {
+            } else if (ev.target.classList.contains("js-Controls")) {
                 ev.target.readOnly = true;
                 ev.target.value = "Press a Key...";
                 const keyListener = async ev2 => {
@@ -35,23 +36,14 @@ class Settings extends Mainmenu {
                     ev.target.value = ev2.code;
                 }
                 document.addEventListener("keydown", keyListener);
-            } else if (ev.target.classList.contains("js-graphics")) {
+            } else if (ev.target.classList.contains("js-Graphics")) {
 
+            } else if (ev.target.classList.contains("js-Acount")) {
+                await this.game.ws.request("deleteUser", {});
+                this.game.ws.close(4001, "Deleted User");
+                location.reload();
             }
         })
-        // const account = this.createHTML(`
-        //     <h2>Account</h2>
-        //     <div>
-        //     <div>
-        //     <button type="button">Delte Account</button>
-        //     </div>
-        //     </div>
-        // `, settings[0]);
-        // account[1].children[0].addEventListener('click', async ev => {
-        //     await this.game.ws.request("deleteUser", {});
-        //     this.game.ws.close();
-        //     location.reload();
-        // })
     }
     saveSetting(name, value, type) {
         return new Promise(async (res, rej) => {
