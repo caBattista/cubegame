@@ -31,7 +31,7 @@ textarea:focus, input:focus, input:hover {
     background-color: rgb(38 184 153);
 }
 
-input[type="submit"]:hover {
+input[type="submit"]:hover, input[type="submit"]:focus {
     color: #fff;
 }
 

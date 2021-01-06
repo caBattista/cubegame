@@ -8,6 +8,7 @@ class Login extends Ui {
     async login() {
         return new Promise((resolve, reject) => {
             const el = this.createHTML(`
+            <img class="loginLogo"src="main/favicon.png"/>
             <h1>Please log in</h1>
             <div class="login">
                 <h3>Username</h3>
@@ -18,7 +19,7 @@ class Login extends Ui {
                 <input type="submit" value="Log In">
                 <input type="submit" value="Register">
             </div>
-            `, document.body, 1);
+            `, document.body, 2);
             const handleSubmit = async (type, data) => {
                 //start websocket
                 await this.game.loader.load("util/ws");
