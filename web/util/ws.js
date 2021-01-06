@@ -20,8 +20,10 @@ class Ws {
     }
 
     keepAlive() {
-        setInterval(() => {
-            this.ws.send();
+        const interv = setInterval(() => {
+            this.ws.readyState === WebSocket.OPEN ?
+                this.ws.send() :
+                clearInterval(interv);
         }, 50000)
     }
 
