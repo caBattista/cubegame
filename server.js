@@ -87,7 +87,7 @@ wss.on("login", async (msg, client) => {
   if (pswRes !== true) { wss.send(client, { err: { msg: "Password verification failed" } }); return; }
 
   //close connection if same client is logged in //doesnt work on heroku
-  //await wss.closeConnection(dbRes[0].client_id);
+  await wss.closeConnection(dbRes[0].client_id);
 
   //Add client_id to db
   const dbRes2 = await db.addUserClientId(dbRes[0].id, client.id);
