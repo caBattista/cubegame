@@ -48,6 +48,11 @@ app.use('/', async (req, res) => {
 const WSServer = require("./server/wsserver.js");
 const wss = new WSServer(server);
 
+wss.on("ping", (msg, client) => {
+  msg.serverHandeled = new Date();
+  wss.send(client, msg);
+})
+
 //Request Validation
 const Joi = require('joi');
 
