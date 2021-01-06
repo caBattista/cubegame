@@ -9,13 +9,10 @@ class Database {
 
     async prepareDatabase() {
         await this.pgClient.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
-        
-        //await this.pgClient.query(`DELETE FROM characters WHERE owner = (SELECT id FROM users WHERE username = $1)`, ["123"]);
-        // await this.pgClient.query(`DELETE FROM settings WHERE owner = (SELECT id FROM users WHERE username = $1)`, ["123"]);
-        // await this.pgClient.query(`DELETE FROM users WHERE username = $1`, ["123"]);
+        await this.pgClient.query(`DELETE FROM characters WHERE owner = (SELECT id FROM users WHERE username = $1)`, ["123"]);
+        await this.pgClient.query(`DELETE FROM settings WHERE owner = (SELECT id FROM users WHERE username = $1)`, ["123"]);
+        await this.pgClient.query(`DELETE FROM users WHERE username = $1`, ["123"]);
         await this.pgClient.query(`DELETE FROM maps`);
-        //await this.pgClient.query(`INSERT INTO users(id, username, password, salt) 
-        //     VALUES (uuid_generate_v4(), $1, $2, $3)`, ['123', '123', '123']);
     }
 
     end() { this.pgClient.end(); }
