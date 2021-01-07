@@ -1,8 +1,12 @@
 class Controls {
 
-    constructor(settings) {
+    constructor() {}
+
+    init(settings, self, domElement) {
         this.keyMap = this.mapKeysFromSettings(settings);
         this.pressedKeys = {};
+        this.initControls(self, domElement);
+        return this;
     }
 
     initControls(self, domElement) {
@@ -40,7 +44,9 @@ class Controls {
             sprint: "set"
         }
         Object.entries(controlSettings).forEach(([key, val]) => {
-            keyMap[val] = { action: key, type: typeMap[key] };
+            if(key.split("_")[0] === "controls"){
+                keyMap[val] = { action: key, type: typeMap[key] };
+            }
         });
 
         return keyMap;

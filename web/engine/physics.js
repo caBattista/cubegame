@@ -1,11 +1,15 @@
 class Pysics {
 
     constructor() {
-        this.collidableMeshes = [];
+        this.dynamicMeshes = [];
     }
 
+    addMesh(mesh){
+        this.dynamicMeshes.push(mesh);
+    };
+
     setColidable(mesh) {
-        this.collidableMeshes.push(mesh);
+        this.dynamicMeshes.push(mesh);
     }
 
     gravity(directionVector, gravity, terminalVelocity) {
@@ -15,7 +19,7 @@ class Pysics {
 
     collision(position, directionVector) {
         const ray = new THREE.Raycaster(position, directionVector, 0.5, 1);
-        const collisionResults = ray.intersectObjects(this.collidableMeshes);
+        const collisionResults = ray.intersectObjects(this.dynamicMeshes);
         return collisionResults.length > 0;
     }
 

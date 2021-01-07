@@ -66,26 +66,11 @@ class Engine {
     }
 
     initScene() {
-        //scene
         this.scene = new THREE.Scene();
-
-        //physics
         this.physics = new Pysics();
-
-        //map
-        this.map = new Map(this.settings);
-        this.map.loadTextures(this.manager);
-        this.map.addElementsToscene(this.scene);
-        //this.map.addElementsToPhysics(this.physics);
-
-        //self
-        this.self = new Self(this.settings.self);
-        this.self.addElementsToscene(this.scene);
-        //this.self.addElementsToPhysics(this.physics);
-
-        //controls
-        this.controls = new Controls(this.settings);
-        this.controls.initControls(this.self, this.renderer.domElement);
+        this.map = new Map().init(this.settings, this.manager, this.scene, this.physics);
+        this.self = new Self().init(this.settings, this.manager, this.scene, this.physics);
+        this.controls = new Controls().init(this.settings, this.self, this.renderer.domElement);
     }
 
     initUi() {

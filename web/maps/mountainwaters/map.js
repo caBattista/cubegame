@@ -1,7 +1,13 @@
 class Map {
 
-    constructor(settings) {
+    constructor() { }
+
+    init(settings, manager, scene, physics) {
         this.settings = settings;
+        this.loadTextures(manager);
+        this.elements = {};
+        this.createElements(scene);
+        return this;
     }
 
     textures = {
@@ -65,9 +71,7 @@ class Map {
         }
     }
 
-    elements = {}
-
-    addElementsToscene(scene) {
+    createElements(scene) {
         //##################### lights #####################
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
         scene.add(ambientLight);
@@ -182,8 +186,8 @@ class Map {
         scene.add(mesh);
     }
 
-    addElementsToPhysics(pysics){
-    
+    addElementsToPhysics(pysics) {
+
     }
 
     animate() {

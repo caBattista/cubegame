@@ -1,22 +1,21 @@
 class Self {
 
-    constructor(settings) {
-        this.settings = settings;
+    constructor() { }
+
+    init(settings, manager, scene, physics) {
+        this.settings = settings.self;
+        this.elements = {};
+        this.createElements(scene);
+        return this;
     }
 
-    changespeeed(s) { this.settings.speed = s; }
-
-
-    elements = {}
-
-    addElementsToscene(scene) {
+    createElements(scene) {
 
         const yaw = new THREE.Mesh(
             new THREE.BoxGeometry(1, 1, 1),
             new THREE.MeshPhongMaterial({ color: 0xff4444, wireframe: this.settings.useWireframe })
         );
         yaw.position.set(0, this.settings.height, 0);
-        scene.add(yaw);
 
         const pitch = new THREE.Mesh(
             new THREE.BoxGeometry(1, 1, 1),
@@ -35,7 +34,11 @@ class Self {
         this.elements.yaw = yaw;
         this.elements.pitch = pitch;
         this.elements.camera = camera;
+
+        scene.add(yaw);
     }
+
+    changespeeed(s) { this.settings.speed = s; }
 
     addElementsToPhysics(pysics) {
         pysics.addMeshToGravity(this.elements.yaw);
@@ -62,8 +65,8 @@ class Self {
         switch (option) {
             case "controls_forward": this.moveDegRad(0); break;
             case "controls_backward": this.moveDegRad(Math.PI); break;
-            case "controls_Left": this.moveDegRad(Math.PI / 2); break;
-            case "controls_Right": this.moveDegRad(-Math.PI / 2); break;
+            case "controls_left": this.moveDegRad(Math.PI / 2); break;
+            case "controls_right": this.moveDegRad(-Math.PI / 2); break;
             case "controls_jump": this.elements.yaw.position.y += this.settings.speed; break;
             case "controls_sprint":
                 this.settings.speed = 2;

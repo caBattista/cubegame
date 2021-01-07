@@ -43,7 +43,7 @@ class Game {
         if (res.access !== true) { alert("Can't join map"); return; }
         document.body.innerHTML = "";
         //load Three
-        await this.loader.load("ui/ingamemenu/ingamemenu", 1);
+        await this.loader.load("ui/ingameui/ingameui", 1);
         this.ingamemenu = new Ingamemenu(this);
         await this.loader.load("engine/three");
         await this.loader.load("engine/stats");
@@ -51,7 +51,7 @@ class Game {
         await this.loader.load("engine/self");
         await this.loader.load("engine/controls");
         await this.loader.load("engine/physics");
-        await this.loader.load("maps/mountainwaters/water");
+        await this.loader.load("maps/mountainwaters/water");//needs to be according to mapid
         await this.loader.load("maps/mountainwaters/map");
         const settings = await this.ws.request("settings", { action: "getRaw" });
         const characters = await this.ws.request("characters", { action: "get" });

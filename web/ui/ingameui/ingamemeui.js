@@ -7,7 +7,9 @@ class Ingamemenu extends Ui {
 
     createMenu() {
         const button = this.createHTML(`
-            <div class="ingamemenu">Back To Main Menu</div>
+            <div class="ingamemenu">
+            <input type="submit" value="Back To Main Menu">
+            </div>
             `, document.body);
         button.addEventListener("click", ev => {
             this.game.leaveMap();

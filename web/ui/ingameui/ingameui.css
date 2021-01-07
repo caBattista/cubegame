@@ -1,0 +1,7 @@
+.ingamemenu{
+    position: fixed;
+    width: 100%;
+    height: 2em;
+    z-index: 1;
+    background-color: rgba(85, 96, 128, 0.9);
+}
