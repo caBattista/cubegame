@@ -27,7 +27,7 @@ class Mainmenu extends Ui {
 
     createMenuPage(parent) {
 
-        const ul = this.createHTML(`
+        const menu = this.createHTML(`
             <h1>Menu</h1>
             <ul>
                 <li><input type="submit" value="Lobby" class="selected"></li>
@@ -35,16 +35,17 @@ class Mainmenu extends Ui {
                 <li><input type="submit" value="Settings"></li>
                 <li><input type="submit" value="Logout"></li>
             </ul>
-        `, parent, 1);
+            <div></div>
+        `, parent, "all");
 
-        ul.addEventListener("click", ev => {
+        menu[1].addEventListener("click", ev => {
             if (ev.target.tagName === "INPUT") {
                 const inputClicked = ev.target;
                 if (inputClicked.value === "Logout") {
                     location.reload();
                 } else /*if (this.state.selectedPage !== inputClicked.value)*/ {
                     this.state.selectedPage = inputClicked.value;
-                    Array.from(ul.getElementsByTagName("input")).forEach(input => {
+                    Array.from(menu[1].getElementsByTagName("input")).forEach(input => {
                         input.classList.remove("selected");
                     });
                     inputClicked.classList.add("selected");
@@ -52,6 +53,10 @@ class Mainmenu extends Ui {
                     this.loadPage(inputClicked.value);
                 }
             }
+        })
+
+        this.game.ws.onPingUpdate(currentPing => {
+            menu[2].textContent = `Ping: ${currentPing.roundTrip}`;
         })
     }
 

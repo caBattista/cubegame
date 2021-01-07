@@ -8,6 +8,7 @@
     background-color: rgb(85, 96, 128);
     text-align: center;
     box-shadow: 0 0 2px #000;
+    position: relative;
 }
 
 .side>ul {
@@ -27,6 +28,12 @@
 }
 
 .side>ul>li>input {
+    width: 100%;
+}
+
+.side>div {
+    position: absolute;
+    bottom: 10px;
     width: 100%;
 }
 

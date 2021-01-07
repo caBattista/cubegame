@@ -11,13 +11,14 @@ class Ws {
                 };
                 this.ws.onclose = ev => {
                     clearInterval(this.pingInterv);
-                    if(ev.code === 4000){
+                    if (ev.code < 4000) {
                         document.body.innerHTML = `<h1>Your websocket connection has closed.</h1>
                         <h1>Status Code: ${ev.code} ${ev.reason ? ", Reason: " + ev.reason : ""}</h1>
                         <h1><input style="vertical-align: center" type="submit" value="Reload" onclick="location.reload()"/></h1>`;
                     }
                 };
-                this.pingInterv = setInterval(() => {this.ping();}, 50000);
+                this.pingCallbacks = [];
+                this.pingInterv = setInterval(() => { this.ping(); }, 50000);
             };
         });
     }
@@ -33,8 +34,14 @@ class Ws {
                     toServer: res.serverHandeled - timeSent,
                     toClient: now - res.serverHandeled
                 }
-                console.log(this.currentPing);
+                this.pingCallbacks.forEach(callback => {
+                    callback(this.currentPing);
+                })
             })
+    }
+    onPingUpdate(callback) {
+        this.pingCallbacks.push(callback);
+        this.ping();
     }
 
     request(rqType, msg) {
