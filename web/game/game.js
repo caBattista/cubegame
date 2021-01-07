@@ -47,7 +47,7 @@ class Game {
         this.ingamemenu = new Ingamemenu(this);
         await this.loader.load("engine/three");
         await this.loader.load("engine/stats");
-        await this.loader.load("engine/engine", 1);
+        await this.loader.load("engine/engine");
         await this.loader.load("engine/self");
         await this.loader.load("engine/controls");
         await this.loader.load("engine/physics");
