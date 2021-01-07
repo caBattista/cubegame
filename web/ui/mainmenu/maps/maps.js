@@ -20,7 +20,6 @@ class Maps extends Mainmenu {
             await this.game.createMap();
             this.createPage(this.parent);
         });
-
         const res = await this.game.getMaps();
         res.forEach(map => {
             const el = this.createHTML(`<div>

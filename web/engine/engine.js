@@ -43,8 +43,6 @@ class Engine {
     initLoadingManager() {
         const manager = new THREE.LoadingManager();
         manager.resolveURL = this.addCid;
-
-        ;
         manager.onProgress = (url, itemsLoaded, itemsTotal) => {
             if (!this.progressBar) {
                 this.progressBar =

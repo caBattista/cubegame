@@ -34,7 +34,8 @@ class Game {
 
     getMaps() {
         return new Promise(async (res, rej) => {
-            res(await this.ws.request("maps", { action: "get" }));
+            const wsRes = await this.ws.request("maps", { action: "get" });
+            res(wsRes);
         });
     }
 

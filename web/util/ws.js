@@ -3,8 +3,10 @@ class Ws {
     async connect() {
         return new Promise((res, rej) => {
             this.ws = new WebSocket(location.origin.replace(/^http/, 'ws'));
+            this.blocked = true;
             this.ws.onopen = () => {
                 this.ws.onmessage = e => {
+                    this.blocked = false;
                     const data = JSON.parse(e.data);
                     console.log("WS: ", data.client_id);
                     res(data.client_id);
@@ -37,20 +39,40 @@ class Ws {
                 this.pingCallbacks.forEach(callback => {
                     callback(this.currentPing);
                 })
+                console.log(this.currentPing);
             })
     }
+
     onPingUpdate(callback) {
         this.pingCallbacks.push(callback);
-        this.ping();
     }
 
     request(rqType, msg) {
         return new Promise((res, rej) => {
-            this.ws.send(JSON.stringify({ rqType: rqType, msg: msg }));
-            this.ws.onmessage = e => {
-                console.log("WS: ", e.data);
-                res(JSON.parse(e.data));
-            };
+            // if(this.blocked === false){
+                this.blocked = true;
+                this.ws.send(JSON.stringify({ rqType: rqType, msg: msg }));
+                this.ws.onmessage = e => {
+                    this.blocked = false;
+                    console.log("WS: ", e.data);
+                    res(JSON.parse(e.data));
+                };
+            // } else {
+            //     const wait = setInterval(ev => {
+            //         console.log("wait");
+            //         if(this.blocked === false){
+            //             this.blocked = true;
+            //             this.ws.send(JSON.stringify({ rqType: rqType, msg: msg }));
+            //             this.ws.onmessage = e => {
+            //                 this.blocked = false;
+            //                 console.log("WS: ", e.data);
+            //                 res(JSON.parse(e.data));
+            //             };
+            //         }
+            //     }, 100);
+            //     console.log("Websocket not ready");
+            // }
+            
         });
     }
 
