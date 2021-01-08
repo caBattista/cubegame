@@ -25,7 +25,7 @@ class Login extends Ui {
             const handleSubmit = async (type, data) => {
                 //start websocket
                 await this.game.loader.load("util/ws");
-                this.game.ws = new Ws();
+                this.game.ws = new Ws(this.game);
                 this.game.loader.addClientId(await this.game.ws.connect());
 
                 const res = await this.game.ws.request(type, data);

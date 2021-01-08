@@ -1,5 +1,9 @@
 class Ws {
 
+    constructor(game) {
+        this.game = game;
+    }
+
     async connect() {
         return new Promise((res, rej) => {
             this.ws = new WebSocket(location.origin.replace(/^http/, 'ws'));
@@ -12,6 +16,7 @@ class Ws {
                     res(data.client_id);
                 };
                 this.ws.onclose = ev => {
+                    try { this.game.engine.dispose(); } catch (e) { }
                     clearInterval(this.pingInterv);
                     if (ev.code !== 4000) {
                         document.body.innerHTML = `
