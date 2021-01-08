@@ -4,7 +4,7 @@
     left: 50%;
     transform: translate(-50%, -50%) rotate(180deg);
     opacity: 0;
-    transition: 1s;
+    transition: 0.5s;
 }
 
 body>h1 {
@@ -12,7 +12,7 @@ body>h1 {
     text-align: center;
     margin-top: 10vh;
     opacity: 0;
-    transition: 1s;
+    transition: 0.5s;
 }
 
 .login {
@@ -26,7 +26,7 @@ body>h1 {
     background-color: rgba(0, 0, 0, 0.7);
     opacity: 0.9;
     opacity: 0;
-    transition: 1s;
+    transition: 0.5s;
 }
 
 .login>h3 {

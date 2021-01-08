@@ -58,7 +58,7 @@ class Login extends Ui {
                 setTimeout(() => {
                     el.parentNode.children[1].style.opacity = "1";
                     el.parentNode.children[2].style.opacity = "1";
-                }, 1000)
+                }, 500)
             }, 100);
         });
     }
