@@ -20,6 +20,11 @@ class Login extends Ui {
                 <input type="submit" value="Register">
             </div>
             `, document.body, 2);
+
+            setTimeout(() => {
+                el.parentNode.children[0].style.transform =
+                    "translate(-50%, -50%) rotate(360deg)";
+            }, 100)
             const handleSubmit = async (type, data) => {
                 //start websocket
                 await this.game.loader.load("util/ws");
