@@ -11,28 +11,6 @@ body * {
     user-select: none;
 }
 
-input {
-    border: none;
-    padding: 3px 8px;
-    border-radius: 2px;
-    font-family: Orbitron, sans-serif;
-    transition: 0.2s;
-    background-color: rgb(65, 74, 107);
-    color: #fff;
-}
-
-input[type="submit"] {
-    cursor: pointer;
-    color: rgb(38 184 153);
-}
-
-textarea:focus, input:focus, input:hover {
-    outline: none;
-    box-shadow: none;
-    background-color: rgb(38 184 153);
-    color: #fff;
-}
-
 h1 {
     margin: 10px;
 }
@@ -43,6 +21,82 @@ h2 {
 
 h3 {
     margin: 10px;
+}
+
+input {
+    border: none;
+    padding: 3px 8px;
+    border-radius: 2px;
+    font-family: Orbitron, sans-serif;
+    transition: 0.2s;
+    background-color: rgb(65, 74, 107);
+    color: #fff;
+    font-size: 1em !important;
+}
+
+input[type="submit"] {
+    cursor: pointer;
+    color: rgb(38 184 153);
+}
+
+input[type=range] {
+    -webkit-appearance: none;
+    margin: 0;
+    padding: 0;
+    transition: 0.2s;
+    overflow: hidden;
+}
+
+input[type=range]:focus {
+    outline: none;
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+    cursor: pointer;
+    box-shadow: none;
+    background-color: transparent;
+    border-radius: 0;
+    border: none;
+    padding: 0;
+    margin: 0;
+    border-radius: 2px;
+}
+
+input[type=range]::-webkit-slider-thumb {
+    box-shadow: none;
+    border: none;
+    height: 22px;
+    width: 10px;
+    padding: 0;
+    margin: 0;
+    border-radius: 0;
+    background: #ffffff;
+    cursor: pointer;
+    -webkit-appearance: none;
+}
+
+select {
+    width: 210px;
+    padding: 3px 8px;
+    background-color: rgb(65, 74, 107);
+    border-radius: 2px;
+    border: none;
+    color: #fff;
+    font-family: inherit;
+    transition: 0.2s;
+}
+
+textarea:focus, input:hover, select:hover {
+    outline: none;
+    box-shadow: none;
+    background-color: rgb(38 184 153);
+    color: #fff;
+}
+
+*:focus {
+    outline-style: none;
+    box-shadow: none;
+    border-color: transparent;
 }
 
 .list {
@@ -69,10 +123,13 @@ h3 {
     border-top: 2px solid rgb(47, 52, 70);
 }
 
-.list>div>input {
-    border: none;
-    border-radius: 2px;
+.list>div>input[type=text] {
+    width: 200px;
     text-align: center;
+}
+
+.list>div>input[type=range], .list>div>select, .list>div>input[type=submit] {
+    width: 215px;
 }
 
 .selected {

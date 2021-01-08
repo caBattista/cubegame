@@ -51,11 +51,11 @@ class WSServer {
     return client;
   }
 
-  closeConnection(id) {
+  closeConnection(id, code, reason) {
     return new Promise((res, rej) => {
       if (!this.clients[id]) { res(0); return; }
       this.clients[id].closedByServer = true;
-      this.clients[id].ws.close();
+      this.clients[id].ws.close(code, reason);
     });
   }
 

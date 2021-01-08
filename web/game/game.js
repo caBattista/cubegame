@@ -40,6 +40,7 @@ class Game {
     }
 
     async joinMap(mapId) {
+        this.currentMap = mapId;
         const res = await this.ws.request("map", { action: "join", mapId: mapId });
         if (res.access !== true) { alert("Can't join map"); return; }
         document.body.innerHTML = "";
@@ -54,17 +55,17 @@ class Game {
         await this.loader.load("engine/physics");
         await this.loader.load("maps/mountainwaters/water");//needs to be according to mapid
         await this.loader.load("maps/mountainwaters/map");
-        const settings = await this.ws.request("settings", { action: "getRaw" });
+        const settings = await this.ws.request("settings", { action: "get" });
         const characters = await this.ws.request("characters", { action: "get" });
         this.engine = new Engine(this, settings, characters);
     }
 
-    async leaveMap() {
+    async leaveMap(mapId) {
         this.engine.dispose();
         delete this.ingamemenu;
         delete this.engine;
         document.body.innerHTML = "";
-        await this.ws.request("map", { action: "leave" });
+        await this.ws.request("map", { action: "leave", mapId: this.currentMap });
         await this.mainmenu.start();
     }
 
@@ -82,6 +83,19 @@ class Game {
         });
     }
 
-    editCharacter() {
+    editCharacter(id, values) {
+        return new Promise(async (res, rej) => {
+            res(await this.ws.request("characters", { action: "edit", id: values.id, name: values.name }));
+        });
     }
+
+    deleteCharacter(id) {
+        return new Promise(async (res, rej) => {
+            res(await this.ws.request("characters", { action: "delete", id: id }));
+        });
+    }
+
+    //Settings
+
+    //needs to Move here
 } 

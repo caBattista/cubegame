@@ -147,89 +147,38 @@ wss.on("disconnect", async (msg, client) => {
 });
 
 const Simulator = require("./server/simulator.js");
-const { settings } = require('cluster');
+//const { settings } = require('cluster');
 const sim = new Simulator();
 
 // Main Menu
 
 wss.on("maps", async (msg, client) => {
   //verification neccessary!
-  if (msg.action === "create") {
-    const dbRes = await db.addMap({ type: msg.type, max_players: 10 });
-    if (dbRes.length !== 1) { wss.send(client, { err: { msg: "error creating map" } }); return; }
-    sim.addMap(dbRes[0].id);
-    wss.send(client, { message: "created map successfully" }); return;
-  } else if (msg.action === "get") {
-    const dbRes = await db.getMaps();
-    if (typeof (dbRes) === "object") {
-      //is bs
-      //dbRes.forEach(map => { console.log(map); map.players = sim.getPlayersIdsOfMap(map.id) });
-      console.log(msg);
-      wss.send(client, dbRes);
-      return;
-    }
+  switch (msg.action) {
+    case "create":
+      db.addMap({ type: msg.type, max_players: 10 })
+        .then(dbRes => {
+          if (dbRes.length !== 1) { wss.send(client, { err: { msg: "error creating map" } }); return; }
+          sim.addMap(dbRes[0].id);
+          wss.send(client, { message: "created map successfully" });
+        });
+      break;
+    case "get":
+      db.getMaps()
+        .then(dbRes => {
+          if (typeof (dbRes) === "object") {
+            dbRes.forEach(map => { map.players = sim.getPlayersIdsOfMap(map.id) });
+            console.log(msg);
+            wss.send(client, dbRes);
+          }
+        });
+      break;
+    default:
+      wss.send(client, { err: { msg: `action ${msg.action} not defined` } });
+      break;
   }
-  wss.send(client, { err: { msg: "error with maps" } }); return;
 });
 
-wss.on("characters", async (msg, client) => {
-
-  //verification neccessary!
-
-  if (msg.action === "create") {
-    const dbRes = await db.addCharacter(client.id, msg.name);
-    if (dbRes.insertedCount !== 1) { wss.send(client, { err: { msg: "error creating character" } }); return; }
-    wss.send(client, { succ: { msg: "created character successfully" } }); return;
-  } else if (msg.action === "get") {
-    const dbRes = await db.getCharacters(client.id);
-    if (typeof (dbRes) === "object") {
-      wss.send(client, dbRes);
-      return;
-    }
-  }
-  wss.send(client, { merr: { msg: "error with maps" } }); return;
-});
-
-wss.on("settings", async (msg, client) => {
-
-  //better verification neccessary!
-
-  if (msg.action === "get") {
-    const settings = await db.getSettings(client.id);
-
-    //fill template with values
-    let template = [];
-    config.user_settings_template.forEach(category => {
-      let newCategory = { display_name: category.display_name, children: [] }
-      category.children.forEach(setting => {
-        newCategory.children.push({
-          display_name: setting.display_name,
-          name: setting.name,
-          type: setting.type,
-          value: settings[setting.name]
-        })
-      })
-      template.push(newCategory);
-    })
-
-    if (typeof (settings) === "object") { wss.send(client, template); return; }
-    else { wss.send(client, { err: { msg: "error getting map" } }); return; }
-
-  } else if (msg.action === "getRaw") {
-    const settings = await db.getSettings(client.id);
-    if (typeof (settings) === "object") { wss.send(client, settings); return; }
-    else { wss.send(client, { err: { msg: "error getting map" } }); return; }
-  } else if (msg.action === "set") {
-
-    const dbRes = await db.setSettings(client.id, msg.name, msg.value, msg.type);
-    if (dbRes !== true) { wss.send(client, { err: { msg: "error changing settings" } }); return; }
-    wss.send(client, { message: "changed settings successfully" }); return;
-
-  }
-  else { wss.send(client, { err: { msg: "error with settings" } }); return; }
-});
-
-//In game
 wss.on("map", async (msg, client) => {
 
   //verification neccessary!
@@ -238,30 +187,71 @@ wss.on("map", async (msg, client) => {
     sim.addPlayerToMap(client.id, msg.mapId);
     wss.send(client, { access: true });
   } else if (msg.action === "change") {
-
     if (msg.changes.self) {
       const res = sim.changePlayer(client.id, msg.changes.self);
       if (res === true) {
         await wss.closeConnection(client.id);
       }
     }
-
   } else if (msg.action === "leave") {
     sim.removePlayer(client.id);
     wss.send(client, { message: "left map sucessfully" });
   }
 });
 
-/*
+wss.on("characters", (msg, client) => {
+
+  //verification neccessary!
+
+  switch (msg.action) {
+    case "create":
+      db.addCharacter(client.id, msg.name)
+        .then(dbRes => {
+          if (dbRes.insertedCount !== 1) { wss.send(client, { err: { msg: "error creating character" } }); return; }
+          wss.send(client, { succ: { msg: "created character successfully" } });
+        });
+      break;
+    case "get":
+      db.getCharacters(client.id)
+        .then(dbRes => { wss.send(client, dbRes); });
+      break;
+    case "delete":
+      db.deleteCharacter(client.id, msg.id)
+        .then(dbRes => { wss.send(client, dbRes); });
+      break;
+    default:
+      wss.send(client, { err: { msg: `action ${msg.action} not defined` } });
+      break;
+  }
+});
+
+wss.on("settings", async (msg, client) => {
+  switch (msg.action) {
+    case "get":
+      db.getSettings(client.id).then(rows => { wss.send(client, rows[0]); })
+      break;
+    case "set":
+      db.setSettings(client.id, msg.name, msg.value)
+        .then(dbRes => { wss.send(client, { message: "changed settings successfully" }); })
+        .catch(err => { wss.send(client, { err: { msg: "error changing settings " + err } }); })
+      break;
+    default:
+      wss.send(client, { err: { msg: `action ${msg.action} not defined` } });
+      break;
+  }
+});
+
+
 //Anti Cheat System
 setInterval(() => {
   const offenders = sim.removeOffenders();
   offenders.forEach(offender => {
-    wss.send(wss.clients[offender.id], { offences: offender.offences})
-    wss.closeConnection(offender.id);
+    wss.send(wss.clients[offender.id], { offences: offender.offences })
+    wss.closeConnection(offender.id, 3999, "Violation");
   })
 }, 10000);
 
+/*
 //On Close
 const exitHandler = () => {
   db.end();

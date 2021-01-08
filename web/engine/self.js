@@ -6,6 +6,7 @@ class Self {
         this.settings = settings.self;
         this.elements = {};
         this.createElements(scene);
+        physics.addMesh(this.elements.yaw);
         return this;
     }
 
@@ -39,19 +40,6 @@ class Self {
     }
 
     changespeeed(s) { this.settings.speed = s; }
-
-    addElementsToPhysics(pysics) {
-        pysics.addMeshToGravity(this.elements.yaw);
-        // if (Math.abs(this.self.elements.yaw.position.x) > 125 || Math.abs(this.self.elements.yaw.position.z) > 125) {
-        //     this.self.elements.yaw.position.y -= this.settings.gravity;
-        // }
-        // else if (this.self.elements.yaw.position.y < this.settings.height) {
-        //     this.self.elements.yaw.position.y = this.settings.height;
-        // }
-        // else if (this.self.elements.yaw.position.y > this.settings.height) {
-        //     this.self.elements.yaw.position.y -= this.settings.gravity;
-        // }
-    }
 
     moveDegRad(degRad) {
         this.elements.yaw.position.add(

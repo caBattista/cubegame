@@ -8,7 +8,8 @@ class Engine {
 
         this.settings = settings;
         this.settings.useWireframe = false;
-        this.settings.self = { height: 0.5, speed: 0.5, turnSpeed: Math.PI * 0.005, gravity: 0.3 };
+        this.settings.physics = { gravity: 0.3 };
+        this.settings.self = { height: 0, speed: 0.2, turnSpeed: Math.PI * 0.005 };
         this.settings.bullet = { height: 0.4, speed: 2, end: 500, gravity: 0 };
 
         // ############# characters #############
@@ -65,7 +66,7 @@ class Engine {
 
     initScene() {
         this.scene = new THREE.Scene();
-        this.physics = new Pysics();
+        this.physics = new Pysics().init(this.settings);
         this.map = new Map().init(this.settings, this.manager, this.scene, this.physics);
         this.self = new Self().init(this.settings, this.manager, this.scene, this.physics);
         this.controls = new Controls().init(this.settings, this.self, this.renderer.domElement);
@@ -104,6 +105,8 @@ class Engine {
                 this.game.ws.request("map", { action: "change", changes: changes });
             }
 
+            this.physics.animate();
+
             this.renderer.render(this.scene, this.self.elements.camera);
 
             this.stats0.end();
@@ -111,10 +114,10 @@ class Engine {
 
         this.renderloop = setInterval(() => {
             requestAnimationFrame(() => { renderScene(); });
-        }, 33);
+        }, 16);
     }
 
-    dispose(){
+    dispose() {
         clearInterval(this.renderloop);
     }
 }

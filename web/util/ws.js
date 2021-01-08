@@ -14,9 +14,11 @@ class Ws {
                 this.ws.onclose = ev => {
                     clearInterval(this.pingInterv);
                     if (ev.code < 4000) {
-                        document.body.innerHTML = `<h1>Your websocket connection has closed.</h1>
+                        document.body.innerHTML = `
+                        <style>body{ text-align: center; }</style>
+                        <h1>Your websocket connection has closed.</h1>
                         <h1>Status Code: ${ev.code} ${ev.reason ? ", Reason: " + ev.reason : ""}</h1>
-                        <h1><input style="vertical-align: center" type="submit" value="Reload" onclick="location.reload()"/></h1>`;
+                        <h1><input type="submit" value="Reload" onclick="location.reload()"/></h1>`;
                     }
                 };
                 this.pingCallbacks = [];
