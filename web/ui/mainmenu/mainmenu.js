@@ -55,9 +55,6 @@ class Mainmenu extends Ui {
             }
         })
 
-        this.game.ws.onPingUpdate(currentPing => {
-            menu[2].textContent = `Ping: ${currentPing.roundTrip}`;
-        })
     }
 
     async loadPage(pageName) {

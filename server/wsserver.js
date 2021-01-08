@@ -8,6 +8,7 @@ class WSServer {
     const WebSocket = require('ws');
     //same port as express
     this.wss = new WebSocket.Server({ server: server, clientTracking: false });
+    console.log("WS: started");
     this.wss.on('connection', (ws, req) => {
       const client = this.addClient(ws);
       this.send(client, { client_id: client.id });
@@ -15,12 +16,14 @@ class WSServer {
       this.onMessage(ws, msg => {
         console.log("WS: recieved from ", client.id, msg);
         const handlers = this.handlers[msg.rqType];
-        if (handlers) handlers.forEach(handler => { handler.handler(msg.msg, client) });
+        if (handlers) handlers.forEach(handler => {
+          handler.handler(msg.msg, client);
+        });
       })
 
       this.onClose(ws, msg => {
         const handlers = this.handlers["disconnect"];
-        if (handlers) handlers.forEach(handler => { handler.handler(msg.msg, client) });
+        if (handlers) handlers.forEach(handler => { handler.handler(msg.msg, client); });
         delete this.clients[client.id];
       })
 
@@ -28,7 +31,7 @@ class WSServer {
   }
 
   on(rqType, handler) {
-    this.handlers[rqType] = [{ handler: handler, active: true }];
+    this.handlers[rqType] = [{ handler: handler }];
   }
 
   onMessage(ws, callback) {

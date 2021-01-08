@@ -8,7 +8,7 @@ class Ws {
                 this.ws.onmessage = e => {
                     this.blocked = false;
                     const data = JSON.parse(e.data);
-                    console.log("WS: ", data.client_id);
+                    console.log("WSOPEN: ", data.client_id);
                     res(data.client_id);
                 };
                 this.ws.onclose = ev => {
@@ -43,36 +43,15 @@ class Ws {
             })
     }
 
-    onPingUpdate(callback) {
-        this.pingCallbacks.push(callback);
-    }
-
     request(rqType, msg) {
         return new Promise((res, rej) => {
-            // if(this.blocked === false){
-                this.blocked = true;
-                this.ws.send(JSON.stringify({ rqType: rqType, msg: msg }));
-                this.ws.onmessage = e => {
-                    this.blocked = false;
-                    console.log("WS: ", e.data);
-                    res(JSON.parse(e.data));
-                };
-            // } else {
-            //     const wait = setInterval(ev => {
-            //         console.log("wait");
-            //         if(this.blocked === false){
-            //             this.blocked = true;
-            //             this.ws.send(JSON.stringify({ rqType: rqType, msg: msg }));
-            //             this.ws.onmessage = e => {
-            //                 this.blocked = false;
-            //                 console.log("WS: ", e.data);
-            //                 res(JSON.parse(e.data));
-            //             };
-            //         }
-            //     }, 100);
-            //     console.log("Websocket not ready");
-            // }
-            
+            this.blocked = true;
+            this.ws.send(JSON.stringify({ rqType: rqType, msg: msg }));
+            this.ws.onmessage = e => {
+                this.blocked = false;
+                console.log("WS: ", e.data);
+                res(JSON.parse(e.data));
+            };
         });
     }
 

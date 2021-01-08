@@ -60,9 +60,10 @@ class Game {
     }
 
     async leaveMap() {
-        document.body.innerHTML = "";
+        this.engine.dispose();
         delete this.ingamemenu;
         delete this.engine;
+        document.body.innerHTML = "";
         await this.ws.request("map", { action: "leave" });
         await this.mainmenu.start();
     }

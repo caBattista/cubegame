@@ -109,9 +109,13 @@ class Engine {
             this.stats0.end();
         }
 
-        setInterval(() => {
+        this.renderloop = setInterval(() => {
             requestAnimationFrame(() => { renderScene(); });
         }, 33);
+    }
+
+    dispose(){
+        clearInterval(this.renderloop);
     }
 }
 

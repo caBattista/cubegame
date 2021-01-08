@@ -13,7 +13,7 @@ const port = process.env.PORT || config.express_settings.port;
 
 const server = app.listen(port, () => {
   require('dns').lookup(require('os').hostname(), (err, add, fam) => {
-    console.log('Webserver started on ' + add + ':' + port);
+    console.log('EX: Webserver started on ' + add + ':' + port);
   });
 });
 
@@ -48,8 +48,6 @@ app.use('/', async (req, res) => {
 const WSServer = require("./server/wsserver.js");
 const wss = new WSServer(server);
 
-
-
 //Request Validation
 const Joi = require('joi');
 
@@ -65,6 +63,7 @@ const pepper = "|>3|>|>3|2";
 //Handle Ping to keep websockets open
 wss.on("ping", (msg, client) => {
   msg.serverHandeled = Date.now();
+  console.log("ping");
   wss.send(client, msg);
 })
 
@@ -154,9 +153,7 @@ const sim = new Simulator();
 // Main Menu
 
 wss.on("maps", async (msg, client) => {
-
   //verification neccessary!
-
   if (msg.action === "create") {
     const dbRes = await db.addMap({ type: msg.type, max_players: 10 });
     if (dbRes.length !== 1) { wss.send(client, { err: { msg: "error creating map" } }); return; }
@@ -167,6 +164,7 @@ wss.on("maps", async (msg, client) => {
     if (typeof (dbRes) === "object") {
       //is bs
       //dbRes.forEach(map => { console.log(map); map.players = sim.getPlayersIdsOfMap(map.id) });
+      console.log(msg);
       wss.send(client, dbRes);
       return;
     }
