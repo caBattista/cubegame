@@ -7,6 +7,7 @@ class Login extends Ui {
 
     async login() {
         return new Promise((resolve, reject) => {
+
             const el = this.createHTML(`
             <img class="loginLogo"src="main/favicon.png"/>
             <h1>Please log in</h1>
@@ -21,10 +22,6 @@ class Login extends Ui {
             </div>
             `, document.body, 2);
 
-            setTimeout(() => {
-                el.parentNode.children[0].style.transform =
-                    "translate(-50%, -50%) rotate(360deg)";
-            }, 100)
             const handleSubmit = async (type, data) => {
                 //start websocket
                 await this.game.loader.load("util/ws");
@@ -51,6 +48,18 @@ class Login extends Ui {
             el.children[6].addEventListener("click", ev => {
                 handleSubmit("register", this.formToJSON(el));
             });
+
+            //animation
+
+            setTimeout(() => {
+                el.parentNode.children[0].style.transform =
+                    "translate(-50%, -50%) rotate(360deg)";
+                el.parentNode.children[0].style.opacity = "1";
+                setTimeout(() => {
+                    el.parentNode.children[1].style.opacity = "1";
+                    el.parentNode.children[2].style.opacity = "1";
+                }, 1000)
+            }, 100);
         });
     }
 }
