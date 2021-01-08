@@ -59,7 +59,7 @@ class Login extends Ui {
                     el.parentNode.children[1].style.opacity = "1";
                     el.parentNode.children[2].style.opacity = "1";
                 }, 500)
-            }, 100);
+            }, 10);
         });
     }
 }
