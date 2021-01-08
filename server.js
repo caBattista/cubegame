@@ -88,7 +88,8 @@ wss.on("login", async (msg, client) => {
   //close connection if same client is logged in //doesnt work on heroku
   console.log("client_id: ", dbRes[0].client_id);
   //const dbRes = await db.removeUserClientId(dbRes[0].client_id);
-  await wss.closeConnection(dbRes[0].client_id);
+  await wss.closeConnection(dbRes[0].client_id, 4010,
+    "Someone logged into your accout. There can only be one session per account.");
 
   //Add client_id to db
   const dbRes2 = await db.addUserClientId(dbRes[0].id, client.id);
@@ -190,7 +191,7 @@ wss.on("map", async (msg, client) => {
     if (msg.changes.self) {
       const res = sim.changePlayer(client.id, msg.changes.self);
       if (res === true) {
-        await wss.closeConnection(client.id);
+        wss.closeConnection(client.id, 4100, "Violation");
       }
     }
   } else if (msg.action === "leave") {
@@ -247,7 +248,7 @@ setInterval(() => {
   const offenders = sim.removeOffenders();
   offenders.forEach(offender => {
     wss.send(wss.clients[offender.id], { offences: offender.offences })
-    wss.closeConnection(offender.id, 3999, "Violation");
+    wss.closeConnection(offender.id, 4100, "Violation");
   })
 }, 10000);
 

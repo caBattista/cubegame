@@ -13,7 +13,7 @@ class Ws {
                 };
                 this.ws.onclose = ev => {
                     clearInterval(this.pingInterv);
-                    if (ev.code < 4000) {
+                    if (ev.code !== 4000) {
                         document.body.innerHTML = `
                         <style>body{ text-align: center; }</style>
                         <h1>Your websocket connection has closed.</h1>
