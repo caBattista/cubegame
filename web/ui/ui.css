@@ -89,7 +89,7 @@ select {
 textarea:focus, input:hover, select:hover {
     outline: none;
     box-shadow: none;
-    background-color: rgb(38 184 153);
+    background-color: rgb(38, 184, 153);
     color: #fff;
 }
 
@@ -133,7 +133,7 @@ textarea:focus, input:hover, select:hover {
 }
 
 .selected {
-    background-color: rgb(38 184 153) !important;
+    background-color: rgb(38, 184, 153) !important;
     color: #fff !important;
 }
 
@@ -178,6 +178,6 @@ textarea:focus, input:hover, select:hover {
 }
 
 .tooltipClose:hover {
-    background-color: rgb(38 184 153) !important;
+    background-color: rgb(38, 184, 153) !important;
     color: #fff;
 }

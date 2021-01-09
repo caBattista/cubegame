@@ -184,19 +184,23 @@ wss.on("map", async (msg, client) => {
 
   //verification neccessary!
 
-  if (msg.action === "join") {
-    sim.addPlayerToMap(client.id, msg.mapId);
-    wss.send(client, { access: true });
-  } else if (msg.action === "change") {
-    if (msg.changes.self) {
-      const res = sim.changePlayer(client.id, msg.changes.self);
-      if (res === true) {
-        wss.closeConnection(client.id, 4100, "Violation");
+  switch (msg.action) {
+    case "join":
+      sim.addPlayerToMap(client.id, msg.mapId);
+      wss.send(client, { access: true });
+      break;
+    case "change":
+      if (msg.changes.self) {
+        const res = sim.changePlayer(client.id, msg.changes.self);
+        if (res === true) {
+          wss.closeConnection(client.id, 4100, "Violation");
+        }
       }
-    }
-  } else if (msg.action === "leave") {
-    sim.removePlayer(client.id);
-    wss.send(client, { message: "left map sucessfully" });
+      break;
+    case "leave":
+      sim.removePlayer(client.id);
+      wss.send(client, { message: "left map sucessfully" });
+      break;
   }
 });
 
@@ -243,14 +247,14 @@ wss.on("settings", async (msg, client) => {
 });
 
 
-//Anti Cheat System
-setInterval(() => {
-  const offenders = sim.removeOffenders();
-  offenders.forEach(offender => {
-    wss.send(wss.clients[offender.id], { offences: offender.offences })
-    wss.closeConnection(offender.id, 4100, "Violation");
-  })
-}, 10000);
+// //Anti Cheat System
+// setInterval(() => {
+//   const offenders = sim.removeOffenders();
+//   offenders.forEach(offender => {
+//     wss.send(wss.clients[offender.id], { offences: offender.offences })
+//     wss.closeConnection(offender.id, 4100, "Violation");
+//   })
+// }, 10000);
 
 /*
 //On Close

@@ -26,7 +26,7 @@ class Stats {
 
         //Add to Dom
         this.statsCont = document.createElement("div");
-        this.statsCont.id = "stats";
+        this.statsCont.className = "stats";
         document.body.appendChild(this.statsCont);
 
         this.textCont = document.createElement("div");

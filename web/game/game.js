@@ -46,7 +46,7 @@ class Game {
         document.body.innerHTML = "";
         //load Three
         await this.loader.load("ui/ingameui/ingameui", 1);
-        this.ingamemenu = new Ingamemenu(this);
+        this.ingameui = new Ingameui(this);
         await this.loader.load("engine/three");
         await this.loader.load("engine/stats");
         await this.loader.load("engine/engine");
@@ -60,7 +60,7 @@ class Game {
         this.engine = new Engine(this, settings, characters);
     }
 
-    async leaveMap(mapId) {
+    async leaveMap() {
         this.engine.dispose();
         delete this.ingamemenu;
         delete this.engine;

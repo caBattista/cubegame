@@ -16,6 +16,8 @@ class Engine {
 
         this.characters = characters;
 
+        // ############# sound #############
+
         this.audio = {
             ugh: new Audio(this.addCid('maps/mountainwaters/audio/ugh.mp3')),
             hit: new Audio(this.addCid('maps/mountainwaters/audio/hit.mp3'))
@@ -23,45 +25,32 @@ class Engine {
 
         // ############# init process #############
 
-        this.initRenderer();
-        this.initLoadingManager();
+        this.manager = this.initLoadingManager();
+        this.manager.onLoad = () => {
+            this.initRenderer();
+            this.initResizeHandler();
+            this.startRender();
+            const waitForRender = setInterval(() => {
+                if(this.renderloop){
+                    clearInterval(waitForRender);
+                    this.game.ingameui.removeProgressBar();
+                    this.game.ingameui.show();
+                }
+            }, 100);
+        };
         this.initScene();
-        this.initUi();
-        this.initResizeHandler();
-        this.startRender();
-    }
-
-    initRenderer() {
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        document.body.appendChild(renderer.domElement);
-
-        this.renderer = renderer;
     }
 
     initLoadingManager() {
         const manager = new THREE.LoadingManager();
         manager.resolveURL = this.addCid;
+        this.game.ingameui.createProgressBar();
         manager.onProgress = (url, itemsLoaded, itemsTotal) => {
-            if (!this.progressBar) {
-                this.progressBar =
-                    this.game.ui.createHTML(`<div id="progressBar"><div></div><div></div></div>`, document.body);
-            }
-            this.progressBar.children[0].style.width = `${itemsLoaded / itemsTotal * 100}%`;
-            this.progressBar.children[1].textContent =
-                'Loading: ' + url.replace(/^.*[\\\/]/, '').split("?")[0] + ' (' + itemsLoaded + ' of ' + itemsTotal + ')';
+            this.game.ingameui.updateProgressBar(itemsLoaded, itemsTotal, `
+                Loading: ${url.replace(/^.*[\\\/]/, '').split("?")[0]} ${itemsLoaded} of ${itemsTotal}
+            `);
         };
-
-        manager.onLoad = () => {
-            if (this.progressBar) {
-                this.progressBar.parentNode.removeChild(this.progressBar);
-                this.progressBar = undefined;
-            }
-        };
-
-        this.manager = manager;
+        return manager;
     }
 
     initScene() {
@@ -69,12 +58,18 @@ class Engine {
         this.physics = new Pysics().init(this.settings);
         this.map = new Map().init(this.settings, this.manager, this.scene, this.physics);
         this.self = new Self().init(this.settings, this.manager, this.scene, this.physics);
-        this.controls = new Controls().init(this.settings, this.self, this.renderer.domElement);
+        this.controls = new Controls().init(this.settings, this.self, this.game.ingameui.canvas);
     }
 
-    initUi() {
-        this.game.ui.createHTML(`<div id="crosshair"></div>`, document.body);
-        this.game.ui.createHTML(`<div id="leaderBoard"><h4>Players</h4><table></table></div>`, document.body);
+    initRenderer() {
+        const renderer = new THREE.WebGLRenderer({
+            canvas: this.game.ingameui.canvas,
+            antialias: true
+        });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        this.renderer = renderer;
     }
 
     initResizeHandler() {
@@ -123,17 +118,6 @@ class Engine {
 }
 
 /*
-            //gravity
-            // if (Math.abs(this.self.elements.yaw.position.x) > 125 || Math.abs(this.self.elements.yaw.position.z) > 125) {
-            //     this.self.elements.yaw.position.y -= this.settings.player.gravity;
-            // }
-            // else if (this.self.elements.yaw.position.y < this.settings.player.height) {
-            //     this.self.elements.yaw.position.y = this.settings.player.height;
-            // }
-            // else if (this.self.elements.yaw.position.y > this.settings.player.height) {
-            //     this.self.elements.yaw.position.y -= this.settings.player.gravity;
-            // }
-
 animate() {
         //despawn whren out of boundsw
         if (this.self.yaw.position.y < -25 ||
