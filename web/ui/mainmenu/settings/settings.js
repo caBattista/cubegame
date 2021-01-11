@@ -8,7 +8,7 @@ class Settings extends Mainmenu {
     }
 
     async createPage() {
-        const settings = await this.game.ws.request("settings", { action: "get" });
+        const settings = await this.game.ws.request("settings", "get");
 
         //create form
         const formEl = this.createHTML(`
@@ -70,15 +70,14 @@ class Settings extends Mainmenu {
         });
 
         formEl.children[7].addEventListener("click", async ev => {
-            await this.game.ws.request("deleteUser", {});
-            this.game.ws.close(4000, "Deleted User");
-            location.reload();
+            await this.game.ws.request("user", "delete");
+            //location.reload();
         });
     }
     saveSetting(name, value, type) {
         return new Promise(async (res, rej) => {
-            res(await this.game.ws.request("settings",
-                { action: "set", name: name, value: value, type: type }));
+            res(await this.game.ws.request("settings", "set",
+                { name: name, value: value, type: type }));
         });
     }
 }

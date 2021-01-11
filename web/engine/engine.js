@@ -25,13 +25,13 @@ class Engine {
 
         // ############# init process #############
 
-        this.manager = this.initLoadingManager();
+        this.initLoadingManager();
         this.manager.onLoad = () => {
             this.initRenderer();
             this.initResizeHandler();
             this.startRender();
             const waitForRender = setInterval(() => {
-                if(this.renderloop){
+                if (this.renderloop) {
                     clearInterval(waitForRender);
                     this.game.ingameui.removeProgressBar();
                     this.game.ingameui.show();
@@ -42,15 +42,14 @@ class Engine {
     }
 
     initLoadingManager() {
-        const manager = new THREE.LoadingManager();
-        manager.resolveURL = this.addCid;
+        this.manager = new THREE.LoadingManager();
+        this.manager.resolveURL = this.addCid;
         this.game.ingameui.createProgressBar();
-        manager.onProgress = (url, itemsLoaded, itemsTotal) => {
+        this.manager.onProgress = (url, itemsLoaded, itemsTotal) => {
             this.game.ingameui.updateProgressBar(itemsLoaded, itemsTotal, `
                 Loading: ${url.replace(/^.*[\\\/]/, '').split("?")[0]} ${itemsLoaded} of ${itemsTotal}
             `);
         };
-        return manager;
     }
 
     initScene() {
@@ -97,7 +96,7 @@ class Engine {
                 changes.self = this.controls.posRot;
             }
             if (changed) {
-                this.game.ws.request("map", { action: "change", changes: changes });
+                this.game.ws.request("map", "change", { changes: changes });
             }
 
             this.physics.animate();

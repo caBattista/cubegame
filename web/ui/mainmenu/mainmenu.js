@@ -54,7 +54,14 @@ class Mainmenu extends Ui {
                 }
             }
         })
+        menu[2].textContent = `Ping: ${this.game.ws.currentPing.roundTrip}/${this.game.ws.currentPing.toServer}/${this.game.ws.currentPing.toClient}`;
 
+        const pingUpdate = setInterval(() => {
+            if (menu[2]) {
+                menu[2].textContent = `Ping: 
+                    ${this.game.ws.currentPing.roundTrip}/${this.game.ws.currentPing.toServer}/${this.game.ws.currentPing.toClient}`;
+            } else { clearInterval(pingUpdate); }
+        }, 50000);
     }
 
     async loadPage(pageName) {

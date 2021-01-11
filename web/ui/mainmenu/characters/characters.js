@@ -37,20 +37,24 @@ class Characters extends Mainmenu {
             el.children[1].addEventListener("click", async ev => {
                 const els = this.createToolTip(`
                     <h1>Name</h1>
-                    <input type="text" value="John">
+                    <input type="text" value="${character.name}">
                     <input type="submit" value="Save">
                     <input type="submit" value="Delete">
                 `, document.body);
                 els.content[2].addEventListener("click", async ev => {
-                    await this.game.editCharacter(character.id, { name: els.content[1].value });
+                    await this.game.editCharacter({ id: character.id, name: "name", value: els.content[1].value });
                     this.createPage(parent);
                     els.tt.remove();
                 });
-                els.content[3].addEventListener("click", async ev => {
-                    await this.game.deleteCharacter(character.id);
-                    this.createPage(parent);
-                    els.tt.remove();
+                els.content[3].addEventListener("click", ev => {
+                    this.game.deleteCharacter(character.id)
+                        .then(data => {
+                            this.createPage(parent);
+                            els.tt.remove();
+                        })
+
                 });
+
             });
         });
     }

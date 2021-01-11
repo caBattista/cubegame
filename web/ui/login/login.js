@@ -22,31 +22,32 @@ class Login extends Ui {
             </div>
             `, document.body, 2);
 
-            const handleSubmit = async (type, data) => {
+            const handleSubmit = async (topic, action, data) => {
                 //start websocket
                 await this.game.loader.load("util/ws");
                 this.game.ws = new Ws(this.game);
                 this.game.loader.addClientId(await this.game.ws.connect());
 
-                const res = await this.game.ws.request(type, data);
-                if (res.succ) {
-                    document.body.innerHTML = "";
-                    resolve();
-                } else {
-                    this.game.ws.close(4000, res.err.msg);
-                    el.previousSibling.textContent = res.err.msg;
-                }
+                this.game.ws.request(topic, action, data)
+                    .then(data => {
+                        document.body.innerHTML = "";
+                        resolve();
+                    })
+                    .catch(data => {
+                        this.game.ws.close(4000, data);
+                        el.previousSibling.textContent = data;
+                    });
             }
             el.addEventListener("keyup", ev => {
                 if (ev.keyCode !== 13) { return; }
                 ev.preventDefault();
-                handleSubmit("login", this.formToJSON(el));
+                handleSubmit("user", "login", this.formToJSON(el));
             });
             el.children[5].addEventListener("click", ev => {
-                handleSubmit("login", this.formToJSON(el));
+                handleSubmit("user", "login", this.formToJSON(el));
             });
             el.children[6].addEventListener("click", ev => {
-                handleSubmit("register", this.formToJSON(el));
+                handleSubmit("user", "register", this.formToJSON(el));
             });
 
             //animation

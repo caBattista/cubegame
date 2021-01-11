@@ -60,30 +60,22 @@ const pepper = "|>3|>|>3|2";
 
 //Request handeling
 
-//Handle Ping to keep websockets open
-wss.on("ping", (msg, client) => {
-  msg.serverHandeled = Date.now();
-  console.log("ping");
-  wss.send(client, msg);
-})
-
 //Handle login
-wss.on("login", async (msg, client) => {
-
+wss.on("user", "login", async (data, client, send) => {
   //Check message
-  const valRes = Joi.validate(msg, Joi.object().keys({
+  const valRes = Joi.validate(data, Joi.object().keys({
     username: Joi.string().alphanum().min(3).max(30),
     password: Joi.string().alphanum().min(3).max(30),
   }), { presence: "required", stripUnknown: true });
-  if (valRes.error !== null) { wss.send(client, { err: { msg: "Validation failed" } }); return; }
+  if (valRes.error !== null) { send("error", "Validation failed"); return; }
 
   //Check db for user
-  const dbRes = await db.getUser({ username: msg.username });
-  if (dbRes.length !== 1) { wss.send(client, { err: { msg: "User not found" } }); return; }
+  const dbRes = await db.getUser({ username: data.username });
+  if (dbRes.length !== 1) { send("error", "User not found"); return; }
 
   //Check password
-  const pswRes = await argon2.verify(dbRes[0].password, dbRes[0].salt + msg.password + pepper)
-  if (pswRes !== true) { wss.send(client, { err: { msg: "Password verification failed" } }); return; }
+  const pswRes = await argon2.verify(dbRes[0].password, dbRes[0].salt + data.password + pepper)
+  if (pswRes !== true) { send("error", "Password verification failed"); return; }
 
   //close connection if same client is logged in //doesnt work on heroku
   console.log("client_id: ", dbRes[0].client_id);
@@ -93,28 +85,28 @@ wss.on("login", async (msg, client) => {
 
   //Add client_id to db
   const dbRes2 = await db.addUserClientId(dbRes[0].id, client.id);
-  if (dbRes2 !== true) { wss.send(client, { err: { msg: "Could not add client_id to user" } }); return; }
+  if (dbRes2 !== true) { send("error", "Could not add client_id to user"); return; }
 
-  wss.send(client, { succ: { msg: "Loged in successfully" } });
+  send("success");
 });
 
-wss.on("register", async (msg, client) => {
-
+wss.on("user", "register", async (data, client, send) => {
+  console.log(data)
   //Check message
-  const valRes = Joi.validate(msg, Joi.object().keys({
+  const valRes = Joi.validate(data, Joi.object().keys({
     username: Joi.string().alphanum().min(3).max(30),
     password: Joi.string().alphanum().min(3).max(30),
   }), { presence: "required", stripUnknown: true });
-  if (valRes.error !== null) { wss.send(client, { err: { msg: "Validation failed" } }); return; }
+  if (valRes.error !== null) { send("error", "Validation failed"); return; }
 
   //Check DB for user (prevent two users with same username)
-  const dbRes = await db.getUser({ username: msg.username });
-  if (dbRes.length !== 0) { wss.send(client, { err: { msg: "User alredy exists" } }); return; }
+  const dbRes = await db.getUser({ username: data.username });
+  if (dbRes.length !== 0) { send("error", "User alredy exists"); return; }
 
   //Create default User
   const user = {
-    username: msg.username,
-    password: msg.password,
+    username: data.username,
+    password: data.password,
     salt: crypto.randomBytes(16).toString('hex'),
     client_id: client.id
   }
@@ -122,26 +114,26 @@ wss.on("register", async (msg, client) => {
 
   // Add user to db
   const dbRes2 = await db.addUser(user);
-  if (dbRes2 !== true) { wss.send(client, { err: { msg: "Could not add user" } }); return; }
+  if (dbRes2 !== true) { send("error", "Could not add user"); return; }
 
   // Add default settings to db
   const dbRes3 = await db.addSettings(client.id, config.user_default_settings);
-  if (dbRes3 !== true) { wss.send(client, { err: { msg: "Could not add settings" } }); return; }
+  if (dbRes3 !== true) { send("error", "Could not add settings"); return; }
 
   // // Add default characters to db
   const dbRes4 = await db.addCharacter(client.id, config.user_default_character.display_name);
-  if (dbRes4 !== true) { wss.send(client, { err: { msg: "Could not add character" } }); return; }
+  if (dbRes4 !== true) { send("error", "Could not add character"); return; }
 
-  wss.send(client, { succ: { msg: "Registered user successfully" } });
+  send("success");
 });
 
-wss.on("deleteUser", async (msg, client) => {
+wss.on("user", "delete", async (data, client, send) => {
   const dbRes = await db.deleteUser(client.id);
-  if (dbRes !== true) { wss.send(client, { err: { msg: "Could not delete user" } }); return; }
-  wss.send(client, { message: "deleted user" });
+  if (dbRes !== true) { send("error", "Could not delete user from Database"); return; }
+  send("success");
 });
 
-wss.on("disconnect", async (msg, client) => {
+wss.on("websocket", "disconnect", async (data, client) => {
   sim.removePlayer(client.id);
   const dbRes = await db.removeUserClientId(client.id);
   if (dbRes !== true) { console.log("err deleting client_id"); return; }
@@ -153,99 +145,72 @@ const sim = new Simulator();
 
 // Main Menu
 
-wss.on("maps", async (msg, client) => {
-  //verification neccessary!
-  switch (msg.action) {
-    case "create":
-      db.addMap({ type: msg.type, max_players: 10 })
-        .then(dbRes => {
-          if (dbRes.length !== 1) { wss.send(client, { err: { msg: "error creating map" } }); return; }
-          sim.addMap(dbRes[0].id);
-          wss.send(client, { message: "created map successfully" });
-        });
-      break;
-    case "get":
-      db.getMaps()
-        .then(dbRes => {
-          if (typeof (dbRes) === "object") {
-            dbRes.forEach(map => { map.players = sim.getPlayersIdsOfMap(map.id) });
-            console.log(msg);
-            wss.send(client, dbRes);
-          }
-        });
-      break;
-    default:
-      wss.send(client, { err: { msg: `action ${msg.action} not defined` } });
-      break;
-  }
+wss.on("maps", "create", (data, client, send) => {
+  db.addMap({ type: data.type, max_players: 10 })
+    .then(dbRes => {
+      if (dbRes.length !== 1) { wss.send(client, { err: { data: "error creating map" } }); return; }
+      sim.addMap(dbRes[0].id);
+      send("success");
+    });
 });
-
-wss.on("map", async (msg, client) => {
-
-  //verification neccessary!
-
-  switch (msg.action) {
-    case "join":
-      sim.addPlayerToMap(client.id, msg.mapId);
-      wss.send(client, { access: true });
-      break;
-    case "change":
-      if (msg.changes.self) {
-        const res = sim.changePlayer(client.id, msg.changes.self);
-        if (res === true) {
-          wss.closeConnection(client.id, 4100, "Violation");
-        }
+wss.on("maps", "get", (data, client, send) => {
+  db.getMaps()
+    .then(dbRes => {
+      if (typeof (dbRes) === "object") {
+        dbRes.forEach(map => { map.players = sim.getPlayersIdsOfMap(map.id) });
+        send("success", dbRes);
       }
-      break;
-    case "leave":
-      sim.removePlayer(client.id);
-      wss.send(client, { message: "left map sucessfully" });
-      break;
-  }
+    });
 });
 
-wss.on("characters", (msg, client) => {
-
-  //verification neccessary!
-
-  switch (msg.action) {
-    case "create":
-      db.addCharacter(client.id, msg.name)
-        .then(dbRes => {
-          if (dbRes.insertedCount !== 1) { wss.send(client, { err: { msg: "error creating character" } }); return; }
-          wss.send(client, { succ: { msg: "created character successfully" } });
-        });
-      break;
-    case "get":
-      db.getCharacters(client.id)
-        .then(dbRes => { wss.send(client, dbRes); });
-      break;
-    case "delete":
-      db.deleteCharacter(client.id, msg.id)
-        .then(dbRes => { wss.send(client, dbRes); });
-      break;
-    default:
-      wss.send(client, { err: { msg: `action ${msg.action} not defined` } });
-      break;
+wss.on("map", "join", (data, client, send) => {
+  sim.addPlayerToMap(client.id, data.mapId);
+  send("success");
+});
+wss.on("map", "change", (data, client, send) => {
+  if (data.changes.self) {
+    const res = sim.changePlayer(client.id, data.changes.self);
+    if (res === true) {
+      wss.closeConnection(client.id, 4100, "Violation");
+    }
   }
 });
-
-wss.on("settings", async (msg, client) => {
-  switch (msg.action) {
-    case "get":
-      db.getSettings(client.id).then(rows => { wss.send(client, rows[0]); })
-      break;
-    case "set":
-      db.setSettings(client.id, msg.name, msg.value)
-        .then(dbRes => { wss.send(client, { message: "changed settings successfully" }); })
-        .catch(err => { wss.send(client, { err: { msg: "error changing settings " + err } }); })
-      break;
-    default:
-      wss.send(client, { err: { msg: `action ${msg.action} not defined` } });
-      break;
-  }
+wss.on("map", "leave", (data, client, send) => {
+  sim.removePlayer(client.id);
+  send("success");
 });
 
+wss.on("characters", "create", (data, client, send) => {
+  db.addCharacter(client.id, data.name)
+    .then(dbRes => { send("success"); })
+    .catch(err => { send("error", err); });
+});
+wss.on("characters", "get", (data, client, send) => {
+  db.getCharacters(client.id)
+    .then(dbRes => { send("success", dbRes); })
+    .catch(err => { send("error", err); });
+});
+wss.on("characters", "edit", (data, client, send) => {
+  db.editCharacter(client.id, data.id, data.name, data.value)
+    .then(dbRes => { send("success", dbRes); })
+    .catch(err => { send("error", err); });
+});
+wss.on("characters", "delete", (data, client, send) => {
+  db.deleteCharacter(client.id, data.id)
+    .then(dbRes => { send("success"); })
+    .catch(err => { send("error", err); });
+});
+
+wss.on("settings", "get", (data, client, send) => {
+  db.getSettings(client.id)
+    .then(rows => { send("success", rows[0]); })
+    .catch(err => { send("error", err); })
+});
+wss.on("settings", "set", (data, client, send) => {
+  db.setSettings(client.id, data.name, data.value)
+    .then(dbRes => { send("success"); })
+    .catch(err => { send("error", err); })
+});
 
 // //Anti Cheat System
 // setInterval(() => {

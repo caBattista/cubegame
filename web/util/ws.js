@@ -2,18 +2,27 @@ class Ws {
 
     constructor(game) {
         this.game = game;
+        this.handlers = {};
     }
 
     async connect() {
         return new Promise((res, rej) => {
+
+            //register connect handler
+            this.on("websocket", "connect", (status, data) => {
+                this.deleteHandler("websocket", "connect");
+                status === "success" ? res(data) : rej(data);
+            });
+
+            //open websocket
             this.ws = new WebSocket(location.origin.replace(/^http/, 'ws'));
-            this.blocked = true;
             this.ws.onopen = () => {
                 this.ws.onmessage = e => {
-                    this.blocked = false;
-                    const data = JSON.parse(e.data);
-                    console.log("WSOPEN: ", data.client_id);
-                    res(data.client_id);
+                    const msg = JSON.parse(e.data);
+                    const handler = this.handlers[msg.topic][msg.action];
+                    console.log("WS GOT: ", msg);
+                    if (handler) { handler(msg.status, msg.data); }
+                    else { console.log(`WS: Message handler for ${msg.topic} not found`) }
                 };
                 this.ws.onclose = ev => {
                     try { this.game.engine.dispose(); } catch (e) { }
@@ -26,44 +35,54 @@ class Ws {
                         <h1><input type="submit" value="Reload" onclick="location.reload()"/></h1>`;
                     }
                 };
-                this.pingCallbacks = [];
-                this.pingInterv = setInterval(() => { this.ping(); }, 50000);
+
+                //set up ping
+                this.on("websocket", "ping", (status, data) => {
+                    const now = Date.now();
+                    this.currentPing = {
+                        lastPingRecieved: now,
+                        roundTrip: now - data.timeSent,
+                        toServer: data.serverHandeled - data.timeSent,
+                        toClient: now - data.serverHandeled
+                    }
+                    console.log(this.currentPing);
+                });
+                this.pingInterv = setInterval(() => {
+                    this.send("websocket", "ping", { timeSent: Date.now() });
+                }, 50000);
+                this.send("websocket", "ping", { timeSent: Date.now() });
             };
         });
     }
 
-    ping() {
-        const timeSent = Date.now();
-        this.request("ping", {})
-            .then(res => {
-                const now = Date.now();
-                this.currentPing = {
-                    lastPingRecieved: now,
-                    roundTrip: now - timeSent,
-                    toServer: res.serverHandeled - timeSent,
-                    toClient: now - res.serverHandeled
-                }
-                this.pingCallbacks.forEach(callback => {
-                    callback(this.currentPing);
-                })
-                console.log(this.currentPing);
-            })
+    on(topic, action, handler) {
+        if (!this.handlers[topic]) { this.handlers[topic] = {}; }
+        this.handlers[topic][action] = handler;
     }
 
-    request(rqType, msg) {
+    request(topic, action, data) {
         return new Promise((res, rej) => {
-            this.blocked = true;
-            this.ws.send(JSON.stringify({ rqType: rqType, msg: msg }));
-            this.ws.onmessage = e => {
-                this.blocked = false;
-                console.log("WS: ", e.data);
-                res(JSON.parse(e.data));
-            };
+            //register handler
+            this.on(topic, action, (status, data) => {
+                this.deleteHandler(topic, action);
+                status === "success" ? res(data) : rej(data);
+            })
+            this.send(topic, action, data);
         });
     }
 
-    sendJSON(json) {
-        this.ws.send(JSON.stringify(json));
+    deleteHandler(topic, action) {
+        delete this.handlers[topic][action];
+        if (Object.keys(this.handlers[topic]).length === 0) {
+            delete this.handlers[topic];
+        }
+    }
+
+    send(topic, action, data) {
+        const request = { topic: topic, action: action };
+        if (data) { request.data = data; }
+        console.log("WS SENT:", request)
+        this.ws.send(JSON.stringify(request));
     }
 
     close(code, reason) {

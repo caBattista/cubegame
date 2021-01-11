@@ -132,9 +132,26 @@ class Database {
         });
     }
 
-    editCharacter(client_id, character_id) {
+    editCharacter(client_id, character_id, column_name, value) {
+        // could change owner or id
         return new Promise((res, rej) => {
-            rej();
+            this.pgClient.query(`SELECT column_name, data_type FROM information_schema.columns 
+            WHERE table_schema = 'public' AND table_name = 'characters'`)
+                .then(pgRes1 => {
+                    for (let i = 0; i < pgRes1.rows.length; i++) {
+                        if (pgRes1.rows[i].column_name === column_name) {
+                            this.pgClient.query(`UPDATE characters 
+                            SET ${column_name} = $1::${pgRes1.rows[i].data_type} 
+                            WHERE owner = (SELECT id FROM users WHERE client_id = $2)
+                            AND id = $3::uuid
+                            `, [value, client_id, character_id])
+                                .then((pgRes2 => { res(true); }))
+                                .catch(err => { rej(this.handleError(err)); })
+                            break;
+                        }
+                    }
+                })
+                .catch(err => { rej(this.handleError(err)); });
         });
     }
 
@@ -193,7 +210,7 @@ class Database {
                         }
                     }
                 })
-                .catch(err => { rej(this.handleError(err)); })
+                .catch(err => { rej(this.handleError(err)); });
         });
     }
 }
