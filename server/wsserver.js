@@ -14,9 +14,7 @@ class WSServer {
 
     //Handle Ping to keep websockets open
     this.on("websocket", "ping", (data, client, send) => {
-      data.serverHandeled = Date.now();
-      console.log("WS: started");
-      send("success", data);
+      send("success", Date.now());
     })
 
     this.wss.on('connection', (ws, req) => {
@@ -36,9 +34,11 @@ class WSServer {
         RawData = JSON.parse(RawData);
         console.log("WS: recieved from ", client.id, RawData);
         const handler = this.handlers[RawData.topic][RawData.action];
-        if (handler) {
-          handler(RawData.data, client, (status, data) => {
-            this.send(client, RawData.topic, RawData.action, status, data);
+        if (typeof handler === 'function') {
+          handler(RawData.data, client, (status, data, clientsIds = [client.id]) => {
+            clientsIds.forEach(clientId => {
+              this.send(this.clients[clientId], RawData.topic, RawData.action, status, data);
+            })
           });
         }
         else {
@@ -52,8 +52,12 @@ class WSServer {
       ws.on('close', RawData => {
         RawData = JSON.parse(RawData);
         console.log(`WS: client ${client.id} disconnected: ${RawData}`);
-        const handler = this.handlers["disconnect"];
-        if (typeof handler === 'function') { handler(RawData.msg, client); }
+        const handler = this.handlers["websocket"]["disconnect"];
+        if (typeof handler === 'function') {
+          handler(RawData.msg, client, (status, data) => {
+            this.send(client, RawData.topic, RawData.action, status, data);
+          });
+        }
         delete this.clients[client.id];
       });
 
@@ -65,6 +69,13 @@ class WSServer {
     this.handlers[topic][action] = handler;
   }
 
+  send(client, topic, action, status, data) {
+    const response = { topic: topic, action: action, status: status };
+    if (data) { response.data = data; }
+    client.ws.send(JSON.stringify(response));
+    console.log("WS: send to ", client.id, response);
+  }
+
   closeConnection(id, code, reason) {
     return new Promise((res, rej) => {
       if (!this.clients[id]) { res(0); return; }
@@ -72,23 +83,6 @@ class WSServer {
       this.clients[id].ws.close(code, reason);
     });
   }
-
-  send(client, topic, action, status, data) {
-
-    const response = { topic: topic, action: action, status: status };
-    if (data) { response.data = data; }
-    client.ws.send(JSON.stringify(response));
-    console.log("WS: send to ", client.id, response);
-  }
-
-  // broadcast(msgObj, clients) {
-  //   for (var key in this.clients) {
-  //     if (this.clients[key].ws.readyState === WebSocket.OPEN && key != dontBCId) {
-  //       this.send(this.clients[key].ws, data);
-  //     }
-  //   }
-  //   clients.forEach(client => this.send(client, msgObj));
-  // }
 
 }
 module.exports = WSServer;

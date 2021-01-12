@@ -163,23 +163,6 @@ wss.on("maps", "get", (data, client, send) => {
     });
 });
 
-wss.on("map", "join", (data, client, send) => {
-  sim.addPlayerToMap(client.id, data.mapId);
-  send("success");
-});
-wss.on("map", "change", (data, client, send) => {
-  if (data.changes.self) {
-    const res = sim.changePlayer(client.id, data.changes.self);
-    if (res === true) {
-      wss.closeConnection(client.id, 4100, "Violation");
-    }
-  }
-});
-wss.on("map", "leave", (data, client, send) => {
-  sim.removePlayer(client.id);
-  send("success");
-});
-
 wss.on("characters", "create", (data, client, send) => {
   db.addCharacter(client.id, data.name)
     .then(dbRes => { send("success"); })
@@ -210,6 +193,27 @@ wss.on("settings", "set", (data, client, send) => {
   db.setSettings(client.id, data.name, data.value)
     .then(dbRes => { send("success"); })
     .catch(err => { send("error", err); })
+});
+
+wss.on("map", "join", (data, client, send) => {
+  sim.addPlayerToMap(client.id, data.mapId);
+  send("success", sim.getPlayersIdsOfMap(data.mapId));
+});
+wss.on("map", "change", (data, client, send) => {
+  if (data.changes.self) {
+    const res = sim.changePlayer(client.id, data.changes.self);
+    if (res === true) {
+      wss.closeConnection(client.id, 4100, "Violation");
+    } else {
+      const players = sim.getPlayersIdsOfMap(sim.getMapOfPlayer(client.id));
+      players.splice(players.indexOf(client.id), 1);
+      send("success", data, players);
+    }
+  }
+});
+wss.on("map", "leave", (data, client, send) => {
+  sim.removePlayer(client.id);
+  send("success");
 });
 
 // //Anti Cheat System

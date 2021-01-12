@@ -19,10 +19,10 @@ class Ws {
             this.ws.onopen = () => {
                 this.ws.onmessage = e => {
                     const msg = JSON.parse(e.data);
-                    const handler = this.handlers[msg.topic][msg.action];
                     console.log("WS GOT: ", msg);
-                    if (handler) { handler(msg.status, msg.data); }
-                    else { console.log(`WS: Message handler for ${msg.topic} not found`) }
+                    const handler = this.handlers[msg.topic] ? this.handlers[msg.topic][msg.action] : null;
+                    if (typeof handler === "function") { handler(msg.status, msg.data); }
+                    else { console.log(`WS: Message handler for ${msg.topic}/${msg.action} not found`) }
                 };
                 this.ws.onclose = ev => {
                     try { this.game.engine.dispose(); } catch (e) { }
@@ -41,16 +41,18 @@ class Ws {
                     const now = Date.now();
                     this.currentPing = {
                         lastPingRecieved: now,
-                        roundTrip: now - data.timeSent,
-                        toServer: data.serverHandeled - data.timeSent,
-                        toClient: now - data.serverHandeled
+                        roundTrip: now - this.timeSent,
+                        toServer: data - this.timeSent,
+                        toClient: now - data
                     }
                     console.log(this.currentPing);
                 });
                 this.pingInterv = setInterval(() => {
-                    this.send("websocket", "ping", { timeSent: Date.now() });
+                    this.timeSent = Date.now();
+                    this.send("websocket", "ping");
                 }, 50000);
-                this.send("websocket", "ping", { timeSent: Date.now() });
+                this.timeSent = Date.now();
+                this.send("websocket", "ping");
             };
         });
     }
