@@ -48,7 +48,6 @@ class Game {
 
     async joinMap(mapId) {
         this.currentMap = mapId;
-        await this.ws.request("map", "join", { mapId: mapId });
         document.body.innerHTML = "";
         //load Three
         await this.loader.load("ui/ingameui/ingameui", 1);
@@ -58,15 +57,33 @@ class Game {
         await this.loader.load("engine/engine");
         await this.loader.load("engine/self");
         await this.loader.load("engine/controls");
+        await this.loader.load("engine/player");
         await this.loader.load("engine/physics");
         await this.loader.load("maps/mountainwaters/water");//needs to be according to mapid
         await this.loader.load("maps/mountainwaters/map");
+        const mapState = await this.ws.request("map", "join", { mapId: mapId });
         const settings = await this.ws.request("settings", "get");
         const characters = await this.ws.request("characters", "get");
-        this.engine = new Engine(this, settings, characters);
+        this.engine = new Engine(this, settings, characters, this.loader.client_id);
+        this.engine.createMapState(mapState, this.loader.client_id);
+        this.engine.handleChanges(changes => {
+            this.ws.request("map", "change", { changes: changes });
+        });
+        this.ws.on("map", "addPlayers", (status, data, send) => {
+            this.engine.addPlayers(data);
+        })
+        this.ws.on("map", "updatePlayers", (status, data, send) => {
+            this.engine.updatePlayers(data);
+        })
+        this.ws.on("map", "removePlayers", (status, data, send) => {
+            this.engine.removePlayers(data);
+        })
     }
 
     async leaveMap() {
+        this.ws.removeHandler("map", "addPlayers");
+        this.ws.removeHandler("map", "updatePlayers");
+        this.ws.removeHandler("map", "removePlayers");
         this.engine.dispose();
         delete this.ingamemenu;
         delete this.engine;

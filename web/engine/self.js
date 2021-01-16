@@ -74,6 +74,15 @@ class Self {
         return parseFloat(num.toFixed(dec));
     }
 
+    set(palyerObj) {
+        this.elements.yaw.position.set(
+            palyerObj.posRot.position.x,
+            palyerObj.posRot.position.y,
+            palyerObj.posRot.position.z,
+        );
+        this.elements.yaw.rotation.y = palyerObj.posRot.rotation.y;
+    }
+
     getPosRot() {
         const posRaw = this.elements.pitch.getWorldPosition(new THREE.Vector3());
         const rotRaw = new THREE.Euler().setFromQuaternion(this.elements.pitch.getWorldQuaternion(new THREE.Quaternion()));

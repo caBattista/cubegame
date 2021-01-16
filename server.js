@@ -197,7 +197,12 @@ wss.on("settings", "set", (data, client, send) => {
 
 wss.on("map", "join", (data, client, send) => {
   sim.addPlayerToMap(client.id, data.mapId);
-  send("success", sim.getPlayersIdsOfMap(data.mapId));
+  const players = sim.getPlayersIdsOfMap(sim.getMapOfPlayer(client.id));
+  players.splice(players.indexOf(client.id), 1);
+  players.forEach(playerId => {
+    wss.send(wss.clients[playerId], "map", "addPlayers", "success", sim.getPlayer(client.id))
+  })
+  send("success", sim.getMapState(data.mapId));
 });
 wss.on("map", "change", (data, client, send) => {
   if (data.changes.self) {
@@ -207,11 +212,18 @@ wss.on("map", "change", (data, client, send) => {
     } else {
       const players = sim.getPlayersIdsOfMap(sim.getMapOfPlayer(client.id));
       players.splice(players.indexOf(client.id), 1);
-      send("success", data, players);
+      players.forEach(playerId => {
+        wss.send(wss.clients[playerId], "map", "updatePlayers", "success", sim.getPlayer(client.id))
+      })
     }
   }
 });
 wss.on("map", "leave", (data, client, send) => {
+  const players = sim.getPlayersIdsOfMap(sim.getMapOfPlayer(client.id));
+  players.splice(players.indexOf(client.id), 1);
+  players.forEach(playerId => {
+    wss.send(wss.clients[playerId], "map", "removePlayers", "success", sim.getPlayer(client.id))
+  })
   sim.removePlayer(client.id);
   send("success");
 });

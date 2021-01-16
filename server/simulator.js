@@ -19,27 +19,46 @@ class Simulator {
     }
 
     addPlayerToMap(playerId, mapId) {
-        this.maps[mapId].players[playerId] = { offences: {} };
+        // generate random Spawn
+        this.maps[mapId].players[playerId] = {
+            offences: {},
+            posRot: {
+                position: {
+                    x: (Math.random() * 199) - 99,
+                    y: 1,
+                    z: (Math.random() * 199) - 99
+                },
+                rotation: {
+                    y: Math.random() * 360
+                }
+            }
+        };
     }
 
-    removePlayer() {
-        this.getPlayers((mapId, playerId) => {
-            delete this.maps[mapId].players[playerId];
-        })
+    removePlayer(playerId) {
+        delete this.maps[this.getMapOfPlayer(playerId)].players[playerId];
     }
 
     addOffence(player, OId) {
         player.offences[OId] = player.offences[OId] > 0 ? ++player.offences[OId] : 1;
     }
 
-    getPlayers(callback) {
+    getPlayers(callback) { // needs to be changed
         const mapIds = Object.keys(this.maps);
-        for (let i = 0; i < mapIds.length; i++) {
+        const mapsLenth = mapIds.length;
+        for (let i = 0; i < mapsLenth; i++) {
             const playerIds = Object.keys(this.maps[mapIds[i]].players);
             for (let j = 0; j < playerIds.length; j++) {
                 callback(mapIds[i], playerIds[j]);
+                return;
             }
         }
+    }
+
+    getPlayer(playerId) {
+        let res = {};
+        res[playerId] = this.maps[this.getMapOfPlayer(playerId)].players[playerId]
+        return res;
     }
 
     getPlayersIdsOfMap(mapId) {
@@ -47,11 +66,17 @@ class Simulator {
     }
 
     getMapOfPlayer(currentPlayerId) {
-        let res;
-        this.getPlayers((mapId, playerId) => {
-            if (currentPlayerId === playerId) { res = mapId; }
-        })
-        return res;
+        const mapIds = Object.keys(this.maps);
+        const mapsLenth = mapIds.length;
+        for (let i = 0; i < mapsLenth; i++) {
+            if (Object.keys(this.maps[mapIds[i]].players).includes(currentPlayerId)) {
+                return mapIds[i];
+            }
+        }
+    }
+
+    getMapState(mapId) {
+        return this.maps[mapId];
     }
 
     changePlayer(playerId, posRot) {
@@ -59,7 +84,7 @@ class Simulator {
         if (!mapId) { return; }
         const player = this.maps[mapId].players[playerId];
 
-        if (player.posRot && player.posRot.position) {
+        if (player.posRot && player.position) {
 
             //active abilities of player and other players need to be checked first
 

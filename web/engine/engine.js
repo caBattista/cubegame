@@ -1,8 +1,8 @@
 class Engine {
-    constructor(game, settings, characters) {
+    constructor(game, settings, characters, clientId) {
         this.game = game;
 
-        this.addCid = url => { return url + "?client_id=" + this.game.loader.client_id; };
+        this.addCid = url => { return url + "?client_id=" + clientId; };
 
         // ############# settings #############
 
@@ -10,6 +10,7 @@ class Engine {
         this.settings.useWireframe = false;
         this.settings.physics = { gravity: 0.3 };
         this.settings.self = { height: 0, speed: 0.2, turnSpeed: Math.PI * 0.005 };
+        this.settings.player = { height: 0, speed: 0.2, turnSpeed: Math.PI * 0.005 };
         this.settings.bullet = { height: 0.4, speed: 2, end: 500, gravity: 0 };
 
         // ############# characters #############
@@ -22,6 +23,9 @@ class Engine {
             ugh: new Audio(this.addCid('maps/mountainwaters/audio/ugh.mp3')),
             hit: new Audio(this.addCid('maps/mountainwaters/audio/hit.mp3'))
         };
+
+        // ############# players #############
+        this.players = {};
 
         // ############# init process #############
 
@@ -95,9 +99,7 @@ class Engine {
                 changed = true;
                 changes.self = this.controls.posRot;
             }
-            if (changed) {
-                this.game.ws.request("map", "change", { changes: changes });
-            }
+            if (changed === true) { this.handleChanges1(changes); }
 
             this.physics.animate();
 
@@ -109,6 +111,43 @@ class Engine {
         this.renderloop = setInterval(() => {
             requestAnimationFrame(() => { renderScene(); });
         }, 16);
+    }
+
+    createMapState(mapState, clientId) {
+        this.self.set(mapState.players[clientId]);
+        delete mapState.players[clientId];
+        this.addPlayers(mapState.players);
+    }
+
+    addPlayers(players) {
+        for (const [key, values] of Object.entries(players)) {
+            this.players[key] = new Player();
+            this.players[key].init(
+                this.settings,
+                this.manager,
+                this.scene,
+                this.physics);
+            this.players[key].set(values);
+        }
+    }
+
+    updatePlayers(players) {
+        for (const [key, values] of Object.entries(players)) {
+            this.players[key].set(values);
+        }
+    }
+
+    removePlayers(players) {
+        for (const [key, values] of Object.entries(players)) {
+            this.scene.remove(this.players[key].elements.player);
+            delete this.players[key];
+        }
+    }
+
+    handleChanges1(changes) { }
+
+    handleChanges(callback) {
+        this.handleChanges1 = callback;
     }
 
     dispose() {

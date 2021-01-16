@@ -1,13 +1,19 @@
 class Player {
 
-    constructor(settings) {
-        this.settings = settings;
-    }
+    constructor() {}
 
-    textures = {
-        "textures/metal/Metal06_nrm.jpg": { type: "texture" },
-        "textures/metal/Metal06_rgh.jpg": { type: "texture" },
-        "textures/metal/Metal06_met.jpg": { type: "texture" }
+    init(settings, manager, scene, physics) {
+        this.settings = settings.player;
+        this.elements = {};
+        this.textures = {
+            "textures/metal/Metal06_nrm.jpg": { type: "texture" },
+            "textures/metal/Metal06_rgh.jpg": { type: "texture" },
+            "textures/metal/Metal06_met.jpg": { type: "texture" }
+        }
+        this.loadTextures(manager);
+        this.createElements(scene);
+        //physics.addMesh(this.elements.yaw);
+        return this;
     }
 
     loadTextures(manager) {
@@ -24,13 +30,11 @@ class Player {
             }
         }
     }
-
-    elements = {}
-
-    addElementsToscene(scene, obj) {
+    
+    createElements(scene) {
         const playerSettings = {
             High: {
-                color: obj.color,
+                color:  "0xffffff ",//playerObj.color,
                 roughness: 0.4,
                 metalness: 1,
                 normalMap: this.textures["textures/metal/Metal06_nrm.jpg"],
@@ -41,23 +45,29 @@ class Player {
                 envMapIntensity: 2,
                 wireframe: this.settings.useWireframe
             }, Low: {
-                color: obj.color,
+                color: "0xffffff ", //playerObj.color,
                 wireframe: this.settings.useWireframe
             }
         }
 
         const player = new THREE.Mesh(
             new THREE.BoxGeometry(1, 1, 1),
-            new THREE.MeshStandardMaterial(playerSettings[this.settings.graphics.quality])
+            new THREE.MeshStandardMaterial(playerSettings[this.settings.graphics_quality])
         );
 
-        player.name = String(obj.id);
-        player.receiveShadow = true;
-        player.castShadow = true;
-        player.position.set(obj.loc.x, obj.loc.y, obj.loc.z);
-        player.rotation.set(obj.loc._x, obj.loc._y, obj.loc._z);
+        player.receiveShadow = this.settings.graphics_quality === "High";
+        player.castShadow = this.settings.graphics_quality === "High";
 
         scene.add(player);
         this.elements.player = player;
+    }
+
+    set(palyerObj) {
+        this.elements.player.position.set(
+            palyerObj.posRot.position.x,
+            palyerObj.posRot.position.y,
+            palyerObj.posRot.position.z,
+        );
+        this.elements.player.rotation.y = palyerObj.posRot.rotation.y;
     }
 }

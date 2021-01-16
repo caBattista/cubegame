@@ -1,5 +1,3 @@
-const { error } = require('console');
-
 class WSServer {
   constructor(server) {
     //For client identification
@@ -81,6 +79,7 @@ class WSServer {
       if (!this.clients[id]) { res(0); return; }
       this.clients[id].closedByServer = true;
       this.clients[id].ws.close(code, reason);
+      res();
     });
   }
 

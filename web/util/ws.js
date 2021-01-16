@@ -10,7 +10,7 @@ class Ws {
 
             //register connect handler
             this.on("websocket", "connect", (status, data) => {
-                this.deleteHandler("websocket", "connect");
+                this.removeHandler("websocket", "connect");
                 status === "success" ? res(data) : rej(data);
             });
 
@@ -66,14 +66,14 @@ class Ws {
         return new Promise((res, rej) => {
             //register handler
             this.on(topic, action, (status, data) => {
-                this.deleteHandler(topic, action);
+                this.removeHandler(topic, action);
                 status === "success" ? res(data) : rej(data);
             })
             this.send(topic, action, data);
         });
     }
 
-    deleteHandler(topic, action) {
+    removeHandler(topic, action) {
         delete this.handlers[topic][action];
         if (Object.keys(this.handlers[topic]).length === 0) {
             delete this.handlers[topic];

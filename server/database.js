@@ -9,9 +9,9 @@ class Database {
 
     async prepareDatabase() {
         await this.pgClient.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
-        await this.pgClient.query(`DELETE FROM characters`);
-        await this.pgClient.query(`DELETE FROM settings`);
-        await this.pgClient.query(`DELETE FROM users`);
+        // await this.pgClient.query(`DELETE FROM characters`);
+        // await this.pgClient.query(`DELETE FROM settings`);
+        // await this.pgClient.query(`DELETE FROM users`);
         await this.pgClient.query(`DELETE FROM maps`);
     }
 
